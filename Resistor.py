@@ -1,7 +1,7 @@
 import gdspy
-from . import basic
-from . import glovar
-from .Pin import Pin
+import basic
+import glovar
+import Pin
 
 # Standard Rules from glovar.py
 min_w = glovar.min_w
@@ -15,8 +15,7 @@ NP_OD = glovar.NP_OD
 OD_W = glovar.OD_W
 GRID = glovar.GRID
 
-# Special Rule for RPO layers
-en_pp_po_wo = 0.14
+en_pp_po_wo = 0.15
 
 class Resistor:
     def __init__(self, series, name, w, l, seg_num, seg_space=0.18, attr=[]):

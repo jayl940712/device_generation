@@ -1,7 +1,7 @@
 import gdspy
-from . import basic
-from . import glovar
-from .Pin import Pin
+import basic
+import glovar
+import Pin
 
 # Standard Rules from glovar.py
 min_w = glovar.min_w
@@ -16,14 +16,14 @@ OD_W = glovar.OD_W
 GRID = glovar.GRID
 
 # Special Rules for Capacitor
-W_CON = 0.14 # Cap contact width
-W_VIA = 0.07 # VIA width
-SP_VIA = 0.09 # VIA to VIA spacing
-EN_VIA = 0.05 # Metal Enclose VIA Rule
+W_CON = 0.15
+W_VIA = 0.10
+SP_VIA = 0.10
+EN_VIA = 0.05 
 VIA_OFF = (W_CON - W_VIA)/2
 VIA_DIST = (SP_VIA - W_VIA)/2
-SP_SUB = 0.5 # Substrate contact to finger space
-W_SUB = min_w['M1'] #0.12 # Sub width
+SP_SUB = 0.5 
+W_SUB = min_w['M1'] 
 
 class Capacitor:
     def __init__(self, name, w, sp, nf, l, m_bot=3, m_top=5, attr=[], f_tip=0.14):

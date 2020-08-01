@@ -1,7 +1,7 @@
-from . import glovar
+import glovar
 import math
 import gdspy
-from .Pin import Pin
+import Pin
 
 # Global Variable Design Rules from glovar.py
 min_w = glovar.min_w
@@ -17,9 +17,9 @@ OD_W = glovar.OD_W
 GRID = glovar.GRID
 
 # Rules for VIAs
-W_VIA = 0.07 # VIA width
-SP_VIA = 0.09 # VIA to VIA spacing
-EN_VIA = 0.05 # Metal Enclose VIA Rule
+W_VIA = 0.05 
+SP_VIA = 0.1
+EN_VIA = 0.05 
 
 
 def block(inst):

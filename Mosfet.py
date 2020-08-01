@@ -1,7 +1,7 @@
 import gdspy
-from . import basic
-from . import glovar
-from .Pin import Pin
+import basic
+import glovar
+import Pin
 
 # Standard Rules from glovar.py
 min_w = glovar.min_w
@@ -17,17 +17,14 @@ GRID = glovar.GRID
 SUB_GR = glovar.SUB_GR
 KR_SP = glovar.KR_SP
 
-# Special rulse related with gate spacing
-dummy_l = 0.06 #critical length for dummy poly
-crit_l = 0.12 #critical length for poly that require additional spacing 
-crit_sp = 0.16 #critical additional spacing for PO
+dummy_l = 0.05 
+crit_l = 0.15 
+crit_sp = 0.15 
 
-# Special rules for OD_25 related rules
-gate_space_25 = 0.22
-sp_co_po_25 = 0.08
-en_od_25 = 0.2  # Enclosue rule of OD_25 and OD layer
+gate_space_25 = 0.20
+sp_co_po_25 = 0.1
+en_od_25 = 0.2  
 
-# Special rules for NT_N related rules
 ex_po_od_na = 0.35
 
 class Mosfet:

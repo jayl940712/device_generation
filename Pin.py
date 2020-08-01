@@ -1,5 +1,5 @@
-from . import basic
-from . import glovar
+import basic
+import glovar
 min_w = glovar.min_w
 
 class Pin:
