@@ -1,6 +1,7 @@
-import glovar, math
+from . import glovar
+import math
 import gdspy
-from Pin import Pin
+from .Pin import Pin
 
 # Global Variable Design Rules from glovar.py
 min_w = glovar.min_w
@@ -16,9 +17,9 @@ OD_W = glovar.OD_W
 GRID = glovar.GRID
 
 # Rules for VIAs
-W_VIA = 0.05
-SP_VIA = 0.1
-EN_VIA = 0.05 
+W_VIA = 0.07 # VIA width
+SP_VIA = 0.09 # VIA to VIA spacing
+EN_VIA = 0.05 # Metal Enclose VIA Rule
 
 
 def block(inst):
@@ -513,5 +514,5 @@ def flip_cell(cell):
 def check_legal_coord(coord, origin=[0,0]):
     if legal(coord[0]-origin[0]) == coord[0]-origin[0] and legal(coord[1]-origin[1]) == coord[1]-origin[1]:
         return True
-    print coord, origin
+    print(coord, origin)
     return False

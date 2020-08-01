@@ -1,7 +1,7 @@
 import gdspy
-import basic
-import glovar
-from Pin import Pin
+from . import basic
+from . import glovar
+from .Pin import Pin
 
 # Standard Rules from glovar.py
 min_w = glovar.min_w
@@ -18,14 +18,14 @@ SUB_GR = glovar.SUB_GR
 KR_SP = glovar.KR_SP
 
 # Special rulse related with gate spacing
-dummy_l = 0.05 
-crit_l = 0.10 
-crit_sp = 0.15
+dummy_l = 0.06 #critical length for dummy poly
+crit_l = 0.12 #critical length for poly that require additional spacing 
+crit_sp = 0.16 #critical additional spacing for PO
 
 # Special rules for OD_25 related rules
-gate_space_25 = 0.20
-sp_co_po_25 = 0.1
-en_od_25 = 0.2
+gate_space_25 = 0.22
+sp_co_po_25 = 0.08
+en_od_25 = 0.2  # Enclosue rule of OD_25 and OD layer
 
 # Special rules for NT_N related rules
 ex_po_od_na = 0.35
@@ -34,6 +34,8 @@ class Mosfet:
 # Currently supported Mosfet types: nch, pch
 # Supported attribute keywords: od25, ud, od, na, lvt, hvt, mac
 # Note: na devices should only be compatible with nch
+# Unsupported attributes: x, dnw, hv25, snw, na25
+# GATE Connection metal check legalization if min_w['M1'] not 0.07
     def __init__(self, nch, name, w, l, nf, attr=[], spectre=True, pinConType=None, bulkCon=[]):
         self.nmos = nch
         self.name = name
@@ -124,7 +126,7 @@ class Mosfet:
         #self.flatten()    
     
     def mac_layer(self):
-        mac_shape = gdspy.Rectangle(self.nw_ll, self.nw_ur, layer['XXX0'], datatype=100)
+        mac_shape = gdspy.Rectangle(self.nw_ll, self.nw_ur, layer['LVSDMY'], datatype=1)
         self.cell.add(mac_shape)
         #self.flatten()
 
@@ -134,10 +136,10 @@ class Mosfet:
         od25_shape = gdspy.Rectangle(od25_p1, od25_p2, layer['OD_25'])
         self.cell.add(od25_shape)
         if self.ud18:
-            od_25ud_shape = gdspy.Rectangle(od25_p1, od25_p2, layer['OD_25'], datatype=100)
+            od_25ud_shape = gdspy.Rectangle(od25_p1, od25_p2, layer['OD_25'], datatype=4)
             self.cell.add(od_25ud_shape)
         elif self.od33:
-            od_25od_shape = gdspy.Rectangle(od25_p1, od25_p2, layer['OD_25'], datatype=100)
+            od_25od_shape = gdspy.Rectangle(od25_p1, od25_p2, layer['OD_25'], datatype=3)
             self.cell.add(od_25od_shape)
         #self.flatten()
 
@@ -353,7 +355,7 @@ class Mosfet:
 
     def print_pins(self):
         if not (self.drain.check() and self.gate.check() and self.source.check() and self.bulk.check()):
-            print "Pin location not legal"
+            print("Pin location not legal")
         #print self.drain, self.gate, self.source, self.bulk
 
     def flip_vert(self):

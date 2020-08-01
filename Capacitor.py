@@ -1,7 +1,7 @@
 import gdspy
-import basic
-import glovar
-from Pin import Pin
+from . import basic
+from . import glovar
+from .Pin import Pin
 
 # Standard Rules from glovar.py
 min_w = glovar.min_w
@@ -16,14 +16,14 @@ OD_W = glovar.OD_W
 GRID = glovar.GRID
 
 # Special Rules for Capacitor
-W_CON = 0.15 
-W_VIA = 0.1
-SP_VIA = 0.1
-EN_VIA = 0.05
+W_CON = 0.14 # Cap contact width
+W_VIA = 0.07 # VIA width
+SP_VIA = 0.09 # VIA to VIA spacing
+EN_VIA = 0.05 # Metal Enclose VIA Rule
 VIA_OFF = (W_CON - W_VIA)/2
 VIA_DIST = (SP_VIA - W_VIA)/2
-SP_SUB = 0.5
-W_SUB = min_w['M1']
+SP_SUB = 0.5 # Substrate contact to finger space
+W_SUB = min_w['M1'] #0.12 # Sub width
 
 class Capacitor:
     def __init__(self, name, w, sp, nf, l, m_bot=3, m_top=5, attr=[], f_tip=0.14):
@@ -118,21 +118,21 @@ class Capacitor:
             self.minus.add_shape(metal, [self.con2[0], self.con2[1]])
             #self.plus.add_shape(metal, [self.con1[0],[self.con1[1][0],self.con1[0][1]+min_w['M1']]])
             #self.minus.add_shape(metal, [[self.con2[0][0],self.con2[1][1]-min_w['M1']],self.con2[1]])
-        # XXX1 Layer
-            momdmy_shape = gdspy.Rectangle((-GRID, self.W_CON), (self.con2[1][0]+GRID, self.con2[0][1]), layer['XXX1'], datatype=int(metal[1]))
+        # MOMDMY Layer
+            momdmy_shape = gdspy.Rectangle((-GRID, self.W_CON), (self.con2[1][0]+GRID, self.con2[0][1]), layer['MOMDMY'], datatype=int(metal[1]))
             self.cell.add(momdmy_shape)
         #self.flatten()
 
     def t2_layer(self):
         for metal in self.metal:
-        # XXX2 Layer
-            dmexcl_shape = gdspy.Rectangle((0, 0), self.con2[1], layer['XXX2'], datatype=int(metal[1]))
+        # DMEXCL Layer
+            dmexcl_shape = gdspy.Rectangle((0, 0), self.con2[1], layer['DMEXCL'], datatype=int(metal[1]))
             self.cell.add(dmexcl_shape)
-    # XXX1 test0 and dummy8 layer for LVS
+    # MOMDMY test0 and dummy8 layer for LVS
     # Layer datatype hard encoded
-        shape = gdspy.Rectangle((-GRID, self.W_CON), (self.con2[1][0]+GRID, self.con2[0][1]), layer['XXX1'], datatype=100)
+        shape = gdspy.Rectangle((-GRID, self.W_CON), (self.con2[1][0]+GRID, self.con2[0][1]), layer['MOMDMY'], datatype=100)
         self.cell.add(shape)
-        shape = gdspy.Rectangle((-GRID, self.W_CON), (self.con2[1][0]+GRID, self.con2[0][1]), layer['XXX1'], datatype=200)
+        shape = gdspy.Rectangle((-GRID, self.W_CON), (self.con2[1][0]+GRID, self.con2[0][1]), layer['MOMDMY'], datatype=27)
         self.cell.add(shape)
         #self.flatten()
 
@@ -154,27 +154,27 @@ class Capacitor:
         self.bulk.add_shape('M6', sub_cell1.get_bounding_box())
         self.bulk.add_shape('M6', sub_cell2.get_bounding_box())
         # PO Dummy Layer
-        podmy_shape = gdspy.Rectangle((self.sub_x1, 0), (self.sub_x2+W_SUB, self.con2[1][1]), layer['PO'], datatype=100)
+        podmy_shape = gdspy.Rectangle((self.sub_x1, 0), (self.sub_x2+W_SUB, self.con2[1][1]), layer['PO'], datatype=7)
         self.cell.add(podmy_shape)
         # OD25 Layer
         self.od25_p1 = [self.sub_x1-en['OD']['PO'], -en['OD']['PO']]
         self.od25_p2 = [self.sub_x2+en['OD']['PO']+W_SUB, self.con2[1][1]+en['OD']['PO']]
         od25_shape = gdspy.Rectangle(self.od25_p1, self.od25_p2, layer['OD_25'])
         self.cell.add(od25_shape)
-        # XXX1 test0 
-        shape = gdspy.Rectangle((-GRID, self.W_CON), (self.con2[1][0]+GRID, self.con2[0][1]), layer['XXX1'], datatype=100)
+        # MOMDMY test0 
+        shape = gdspy.Rectangle((-GRID, self.W_CON), (self.con2[1][0]+GRID, self.con2[0][1]), layer['MOMDMY'], datatype=100)
         self.cell.add(shape)
-        # XXX1 dummy2
-        shape = gdspy.Rectangle(self.od25_p1, self.od25_p2, layer['XXX1'], datatype=200)
+        # MOMDMY dummy2
+        shape = gdspy.Rectangle(self.od25_p1, self.od25_p2, layer['MOMDMY'], datatype=21)
         self.cell.add(shape)
-        # XXX2 Layer
+        # DMEXCL Layer
         for metal in self.metal:
-            dmexcl_shape = gdspy.Rectangle((-GRID, self.W_CON), (self.con2[1][0]+GRID, self.con2[0][1]), layer['XXX2'], datatype=int(metal[1]))
+            dmexcl_shape = gdspy.Rectangle((-GRID, self.W_CON), (self.con2[1][0]+GRID, self.con2[0][1]), layer['DMEXCL'], datatype=int(metal[1]))
             self.cell.add(dmexcl_shape)
         # OD/PO BLK
-        shape = gdspy.Rectangle(self.od25_p1, self.od25_p2, layer['XXX2'], datatype=200)
+        shape = gdspy.Rectangle(self.od25_p1, self.od25_p2, layer['DMEXCL'], datatype=20)
         self.cell.add(shape)
-        shape = gdspy.Rectangle(self.od25_p1, self.od25_p2, layer['XXX2'], datatype=100)
+        shape = gdspy.Rectangle(self.od25_p1, self.od25_p2, layer['DMEXCL'], datatype=21)
         self.cell.add(shape)
         #self.flatten()
 
@@ -201,7 +201,7 @@ class Capacitor:
 
     def print_pins(self):
         if not (self.plus.check() and self.minus.check() and self.bulk.check()):
-            print "Pin location not legal"
+            print("Pin location not legal")
         if self.t2:
             pass
             #print self.plus, self.minus

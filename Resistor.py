@@ -1,7 +1,7 @@
 import gdspy
-import basic
-import glovar
-from Pin import Pin
+from . import basic
+from . import glovar
+from .Pin import Pin
 
 # Standard Rules from glovar.py
 min_w = glovar.min_w
@@ -15,8 +15,8 @@ NP_OD = glovar.NP_OD
 OD_W = glovar.OD_W
 GRID = glovar.GRID
 
-# Special Rule for XXX6 layers
-en_pp_po_wo = 0.15
+# Special Rule for RPO layers
+en_pp_po_wo = 0.14
 
 class Resistor:
     def __init__(self, series, name, w, l, seg_num, seg_space=0.18, attr=[]):
@@ -40,7 +40,7 @@ class Resistor:
         self.cell = gdspy.Cell(name, True) 
         self.res_core()
         if 'wo' in attr:
-            self.xxx6_layer()
+            self.rpo_layer()
             en['PP']['PO'] = en_pp_po
         self.flatten()
         self.print_pins()
@@ -63,16 +63,16 @@ class Resistor:
         #self.flatten()
         return self.cell.to_gds(multiplier)
 
-    def xxx6_layer(self):
-        xxx6_shape = gdspy.Rectangle((self.xxx6_x1, -ex['XXX6']['PO']), (self.xxx6_x2, self.cell_poly_w+ex['XXX6']['PO']), layer['XXX6'])
-        self.cell.add(xxx6_shape)
+    def rpo_layer(self):
+        rpo_shape = gdspy.Rectangle((self.rpdmy_x1, -ex['RPO']['PO']), (self.rpdmy_x2, self.cell_poly_w+ex['RPO']['PO']), layer['RPO'])
+        self.cell.add(rpo_shape)
         #self.flatten()
 
     def res_core(self):
 # Poly Resistor Core
     # Poly Shape Core
         x_pos1 = en['PO']['CO'] - 0.5 * (min_w['M1'] - min_w['CO'])
-        poly_l = 2 * (en['PO']['CO'] + sp['CO']['XXX6'] + min_w['CO']) + self.l
+        poly_l = 2 * (en['PO']['CO'] + sp['CO']['RPO'] + min_w['CO']) + self.l
         m1_vert_space = poly_l - 2 * (min_w['M1'] + x_pos1)
         poly_cell = gdspy.Cell('POLY', True)
         self.origin = [x_pos1, 0]
@@ -90,20 +90,30 @@ class Resistor:
         poly_cell.add(poly_shape)
         poly_cell.add(m1_vert_ref1)
         poly_cell.add(m1_vert_ref2)
-    # XXX6 Layer
-        self.xxx6_x1 = en['PO']['CO'] + min_w['CO'] + sp['CO']['XXX6']
-        self.xxx6_x2 = self.xxx6_x1 + self.l
-        xxx6_datatype = 0
+    # RPDMY Layer
+        self.rpdmy_x1 = en['PO']['CO'] + min_w['CO'] + sp['CO']['RPO']
+        self.rpdmy_x2 = self.rpdmy_x1 + self.l
+        rpdmy_datatype = 0
         if self.m:
-            xxx6_datatype = 1
-        xxx6_shape = gdspy.Rectangle((self.xxx6_x1, 0), (self.xxx6_x2, self.w), layer['XXX6'], datatype=xxx6_datatype)
-        poly_cell.add(xxx6_shape)
+            rpdmy_datatype = 1
+        rpdmy_shape = gdspy.Rectangle((self.rpdmy_x1, 0), (self.rpdmy_x2, self.w), layer['RPDMY'], datatype=rpdmy_datatype)
+        poly_cell.add(rpdmy_shape)
     # Poly Array for seg_num
         poly_space = self.w + self.seg_space
         poly_array = gdspy.CellArray(poly_cell, 1, self.seg_num, [0, poly_space])
         self.cell.add(poly_array)
     # M1 Connection for series/parallel
+        #m1_connect = gdspy.Cell('M1_CON', True)
+        #m1_con_shape = gdspy.Rectangle((0, 0), (min_w['M1'], self.seg_space), layer['M1'])
+        #m1_connect.add(m1_con_shape)
         if self.series and self.seg_num > 1:
+            #m1_num_1 = int((self.seg_num-1)/2)
+            #m1_num_2 = int(self.seg_num/2)
+            #m1_con_array_1 = gdspy.CellArray(m1_connect, 1, m1_num_1, [0, 2*poly_space], (x_pos1, self.w+poly_space))
+            #m1_con_array_2 = gdspy.CellArray(m1_connect, 1, m1_num_2, [0, 2*poly_space], (x_pos2, self.w))
+            #self.cell.add(m1_con_array_1)
+            #self.cell.add(m1_con_array_2)
+            # Check every metal legalization
             m1_num_1 = int(self.seg_num/2) + 1
             m1_num_2 = int((self.seg_num+1)/2)
             for i in range(m1_num_1):
@@ -151,17 +161,21 @@ class Resistor:
             self.cell.add(m1_connect1)
             m1_connect2 = gdspy.Rectangle((x_pos2,0),(x_pos2+min_w['M1'],m1_ur_y),layer['M1'])
             self.cell.add(m1_connect2)
-               # PP Layer
+            #m1_con_array_1 = gdspy.CellArray(m1_connect, 1, self.seg_num-1, [0, poly_space], (x_pos1, self.w))
+            #m1_con_array_2 = gdspy.CellArray(m1_connect, 1, self.seg_num-1, [0, poly_space], (x_pos2, self.w))
+            #self.cell.add(m1_con_array_1)
+            #self.cell.add(m1_con_array_2)
+    # PP Layer
         self.cell_poly_w = self.w*self.seg_num+self.seg_space*(self.seg_num-1)
         pp_p1 = [-en['PP']['PO'], -en['PP']['PO']]
         pp_p2 = [poly_l+en['PP']['PO'], self.cell_poly_w+en['PP']['PO']]
         pp_shape = gdspy.Rectangle(pp_p1, pp_p2, layer['PP'])
         self.cell.add(pp_shape)
-    # XXX3 Layer
-        xxx3_p1 = [-en['XXX3']['PO'], -en['XXX3']['PO']]
-        xxx3_p2 = [poly_l+en['XXX3']['PO'], self.cell_poly_w+en['XXX3']['PO']]
-        xxx3_shape = gdspy.Rectangle(xxx3_p1, xxx3_p2, layer['XXX3'])
-        self.cell.add(xxx3_shape)
+    # RH Layer
+        rh_p1 = [-en['RH']['PO'], -en['RH']['PO']]
+        rh_p2 = [poly_l+en['RH']['PO'], self.cell_poly_w+en['RH']['PO']]
+        rh_shape = gdspy.Rectangle(rh_p1, rh_p2, layer['RH'])
+        self.cell.add(rh_shape)
         #self.flatten()
     # Adding Pins
         if not self.series or self.seg_num == 1:
@@ -176,13 +190,16 @@ class Resistor:
 
     def print_pins(self):
         if not (self.plus.check() and self.minus.check()):
-            print "Pin location not legal"
+            print("Pin location not legal")
         #print self.plus, self.minus
 
     def flip_vert(self):
         flip_cell = gdspy.Cell(self.cell.name, True)
         bounding_box = self.cell.get_bounding_box()
         x_sym_axis = bounding_box[0][0] + bounding_box[1][0]
+        # Floating point error 
+        # Since gdsii precision is 5nm, here we only round to 1nm precision
+        #x_sym_axis = round(x_sym_axis * 10000) / 10000.0
         polydict = self.cell.get_polygons(by_spec=True)
         for key in polydict:
             layer, datatype = key
@@ -196,8 +213,13 @@ class Resistor:
                 new_shape = gdspy.Rectangle([x_min_s,y_min], [x_max_s,y_max], layer, datatype=datatype)
                 flip_cell.add(new_shape)
         self.cell = flip_cell
+        #self.flatten()
         self.plus.flip_vert(x_sym_axis)
         self.minus.flip_vert(x_sym_axis)
+        # Strange issues that need to swap plus and minus pins
+        #temp = self.plus
+        #self.plus = self.minus
+        #self.minus = temp
 
     def bounding_box(self):
         if self.origin:

@@ -1,5 +1,5 @@
-import basic
-import glovar
+from . import basic
+from . import glovar
 min_w = glovar.min_w
 
 class Pin:
@@ -20,10 +20,10 @@ class Pin:
     def check(self, origin=[-0.5*min_w['M1'], -0.5*min_w['M1']]):
         for shape in self.shape:
             if not basic.check_legal_coord(shape[1], origin):
-                print shape[1], origin
+                print(shape[1], origin)
                 return False
             if not basic.check_legal_coord([shape[2][0]+min_w['SP'],shape[2][1]+min_w['SP']], origin):
-                print shape[2], origin
+                print(shape[2], origin)
                 return False
         return True
 
