@@ -1,7 +1,7 @@
 import gdspy
 import basic
 import glovar
-import Pin
+from Pin import Pin
 
 # Standard Rules from glovar.py
 min_w = glovar.min_w

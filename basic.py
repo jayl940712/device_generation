@@ -1,7 +1,7 @@
 import glovar
 import math
 import gdspy
-import Pin
+from Pin import Pin
 
 # Global Variable Design Rules from glovar.py
 min_w = glovar.min_w
