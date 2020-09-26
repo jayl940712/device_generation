@@ -1,7 +1,7 @@
 import gdspy
-import basic
-import glovar
-from Pin import Pin
+from .basic import basic
+from .glovar import tsmc40_glovar as glovar
+from .Pin import Pin
 
 # Standard Rules from glovar.py
 min_w = glovar.min_w
@@ -58,9 +58,9 @@ class Resistor:
             self.origin = None
         self.cell.flatten()
 
-    def to_gds(self, multiplier):
+    def to_gds(self, outfile, multiplier):
         #self.flatten()
-        return self.cell.to_gds(multiplier)
+        return self.cell.to_gds(outfile, multiplier)
 
     def rpo_layer(self):
         rpo_shape = gdspy.Rectangle((self.rpdmy_x1, -ex['RPO']['PO']), (self.rpdmy_x2, self.cell_poly_w+ex['RPO']['PO']), layer['RPO'])
@@ -188,7 +188,7 @@ class Resistor:
                 self.plus.add_shape('M1', [[x_pos2, m1_ll_y_2], [x_pos2+min_w['M1'], m1_ur_y_2]])
 
     def print_pins(self):
-        if not (self.plus.check() and self.minus.check()):
+        if not (basic.check_pin(self.plus) and basic.check_pin(self.minus)):
             print("Pin location not legal")
         #print self.plus, self.minus
 

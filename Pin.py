@@ -1,6 +1,11 @@
-import basic
-import glovar
+from .glovar import tsmc40_glovar as glovar
 min_w = glovar.min_w
+
+def check_legal_coord(coord, origin=[0,0]):
+    if legal(coord[0]-origin[0]) == coord[0]-origin[0] and legal(coord[1]-origin[1]) == coord[1]-origin[1]:
+        return True
+    print(coord, origin)
+    return False
 
 class Pin:
     def __init__(self, name):
@@ -18,13 +23,16 @@ class Pin:
             shape[2][1] = shape[2][1] - offset[1]
 
     def check(self, origin=[-0.5*min_w['M1'], -0.5*min_w['M1']]):
+        assert(False)
+        """
         for shape in self.shape:
-            if not basic.check_legal_coord(shape[1], origin):
+            if not check_legal_coord(shape[1], origin):
                 print(shape[1], origin)
                 return False
-            if not basic.check_legal_coord([shape[2][0]+min_w['SP'],shape[2][1]+min_w['SP']], origin):
+            if not check_legal_coord([shape[2][0]+min_w['SP'],shape[2][1]+min_w['SP']], origin):
                 print(shape[2], origin)
                 return False
+        """
         return True
 
     def flip_vert(self, axis):

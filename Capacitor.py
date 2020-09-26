@@ -1,7 +1,7 @@
 import gdspy
-import basic
-import glovar
-from Pin import Pin
+from .basic import basic
+from .glovar import tsmc40_glovar as glovar
+from .Pin import Pin
 
 # Standard Rules from glovar.py
 min_w = glovar.min_w
@@ -77,8 +77,8 @@ class Capacitor:
             self.origin = None
         self.cell.flatten()
 
-    def to_gds(self, multiplier):
-        return self.cell.to_gds(multiplier)
+    def to_gds(self, outfile,  multiplier):
+        return self.cell.to_gds(outfile, multiplier)
 
     def finger_core(self):
 # MOMCAP Finger CORE
