@@ -1,7 +1,7 @@
 import gdspy
-import basic
-import glovar
-from Pin import Pin
+from .basic import basic
+from .glovar import tsmc40_glovar as glovar
+from .Pin import Pin
 
 # Standard Rules from glovar.py
 min_w = glovar.min_w
@@ -103,9 +103,9 @@ class Mosfet:
         self.cell.flatten()
 
 # Compatible with gdspy
-    def to_gds(self, multiplier):
+    def to_gds(self, outfile, multiplier):
         #self.flatten()
-        return self.cell.to_gds(multiplier)
+        return self.cell.to_gds(outfile, multiplier)
 
     def vth_layer(self, lvt):
         if lvt:
@@ -351,7 +351,7 @@ class Mosfet:
         #self.flatten()
 
     def print_pins(self):
-        if not (self.drain.check() and self.gate.check() and self.source.check() and self.bulk.check()):
+        if not (basic.check_pin(self.drain) and basic.check_pin(self.gate) and basic.check_pin(self.source) and basic.check_pin(self.bulk)):
             print("Pin location not legal")
         #print self.drain, self.gate, self.source, self.bulk
 
