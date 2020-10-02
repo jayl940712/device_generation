@@ -1,11 +1,23 @@
 from .glovar import tsmc40_glovar as glovar
+import math
+
 min_w = glovar.min_w
+GRID = glovar.GRID
+
+def legal(length,ceil=True):
+    # type 0 is ceil, 1 is foor
+    if abs(round(length/(min_w['SP']+min_w['M1'])) * (min_w['SP']+min_w['M1']) - length) < GRID - 0.001:
+        return length
+    if ceil:
+        return int(math.ceil(length/(min_w['SP']+min_w['M1']))) * (min_w['SP']+min_w['M1'])
+    return int(math.floor(length/(min_w['SP']+min_w['M1']))) * (min_w['SP']+min_w['M1'])
 
 def check_legal_coord(coord, origin=[0,0]):
     if legal(coord[0]-origin[0]) == coord[0]-origin[0] and legal(coord[1]-origin[1]) == coord[1]-origin[1]:
         return True
     print(coord, origin)
     return False
+
 
 class Pin:
     def __init__(self, name):
@@ -23,8 +35,6 @@ class Pin:
             shape[2][1] = shape[2][1] - offset[1]
 
     def check(self, origin=[-0.5*min_w['M1'], -0.5*min_w['M1']]):
-        assert(False)
-        """
         for shape in self.shape:
             if not check_legal_coord(shape[1], origin):
                 print(shape[1], origin)
@@ -32,7 +42,6 @@ class Pin:
             if not check_legal_coord([shape[2][0]+min_w['SP'],shape[2][1]+min_w['SP']], origin):
                 print(shape[2], origin)
                 return False
-        """
         return True
 
     def flip_vert(self, axis):

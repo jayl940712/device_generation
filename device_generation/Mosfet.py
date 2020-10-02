@@ -17,14 +17,17 @@ GRID = glovar.GRID
 SUB_GR = glovar.SUB_GR
 KR_SP = glovar.KR_SP
 
-dummy_l = 0.05 
-crit_l = 0.15 
-crit_sp = 0.15 
+# Special rulse related with gate spacing
+dummy_l = 0.06 #critical length for dummy poly
+crit_l = 0.12 #critical length for poly that require additional spacing 
+crit_sp = 0.16 #critical additional spacing for PO
 
-gate_space_25 = 0.20
-sp_co_po_25 = 0.1
-en_od_25 = 0.2  
+# Special rules for OD_25 related rules
+gate_space_25 = 0.22
+sp_co_po_25 = 0.08
+en_od_25 = 0.2  # Enclosue rule of OD_25 and OD layer
 
+# Special rules for NT_N related rules
 ex_po_od_na = 0.35
 
 class Mosfet:
@@ -103,9 +106,9 @@ class Mosfet:
         self.cell.flatten()
 
 # Compatible with gdspy
-    def to_gds(self, outfile, multiplier):
+    def to_gds(self, multiplier):
         #self.flatten()
-        return self.cell.to_gds(outfile, multiplier)
+        return self.cell.to_gds(multiplier)
 
     def vth_layer(self, lvt):
         if lvt:
@@ -351,7 +354,7 @@ class Mosfet:
         #self.flatten()
 
     def print_pins(self):
-        if not (basic.check_pin(self.drain) and basic.check_pin(self.gate) and basic.check_pin(self.source) and basic.check_pin(self.bulk)):
+        if not (self.drain.check() and self.gate.check() and self.source.check() and self.bulk.check()):
             print("Pin location not legal")
         #print self.drain, self.gate, self.source, self.bulk
 

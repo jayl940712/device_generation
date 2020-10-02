@@ -22,7 +22,7 @@ class basic:
     SP_VIA = 0.1
     EN_VIA = 0.05 
 
-
+    @staticmethod
     def block(inst):
         bound = inst.cell.get_bounding_box()
         bound[0][0] = math.floor(bound[0][0]/0.01)*0.01
@@ -33,6 +33,7 @@ class basic:
         y = int((bound[1][1] - bound[0][1]) * 100)
         return [x, y]
 
+    @staticmethod
     def BB(inst, flipCell=False, unit=1e-9):
         bound_box = inst.cell.get_bounding_box()
         bound = [0,0]
@@ -61,6 +62,7 @@ class basic:
         return_bound.append(int(round(bound[1][1]*1.0e-6/unit)))
         return return_bound
 
+    @staticmethod
     def BB_list(bound_list, unit=1e-9):
         bound = [0,0]
         halfGrid = 0.5 * basic.min_w['M1']
@@ -86,6 +88,7 @@ class basic:
         return_bound.append(int(round(bound[1][1]*1.0e-6/unit)))
         return return_bound
 
+    @staticmethod
     def legalize_pin_from_dumb(lo, hi, plane):
         if plane == 3:
             newshape = legal_coord([lo/1000.0, hi/1000.0],[-0.5*basic.min_w['M1'],-0.5*basic.min_w['M1']],plane)
@@ -95,6 +98,7 @@ class basic:
             newshape = legal_coord([lo/1000.0-basic.min_w['M1'], hi/1000.0-basic.min_w['M1']],[-0.5*basic.min_w['M1'],-0.5*basic.min_w['M1']],plane)
             return (int((newshape[0]+basic.min_w['M1'])*1000), int((newshape[1]+basic.min_w['M1'])*1000))
 
+    @staticmethod
     def legal(length,ceil=True):
         # type 0 is ceil, 1 is foor
         if abs(round(length/(basic.min_w['SP']+basic.min_w['M1'])) * (basic.min_w['SP']+basic.min_w['M1']) - length) < basic.GRID - 0.001:
@@ -103,11 +107,13 @@ class basic:
             return int(math.ceil(length/(basic.min_w['SP']+basic.min_w['M1']))) * (basic.min_w['SP']+basic.min_w['M1'])
         return int(math.floor(length/(basic.min_w['SP']+basic.min_w['M1']))) * (basic.min_w['SP']+basic.min_w['M1'])
 
+    @staticmethod
     def legal_len(length):
         if length <= basic.min_w['M1']:
             return basic.min_w['M1']
         return basic.legal(length-basic.min_w['M1'])+basic.min_w['M1']
 
+    @staticmethod
     def legal_coord(coord, origin, plane=1):
         # legalize ll in rectangle
         # plane: 1,2,3,4 in planer relative to lattice point
@@ -123,10 +129,11 @@ class basic:
         y = basic.legal(coord[1]-origin[1],y_ceil) + origin[1]
         return x,y
                               
-
+    @staticmethod
     def offset(inst):
         return inst.cell.get_bounding_box()[0]
 
+    @staticmethod
     def contact(lay=0):
         contact_cell = gdspy.Cell('CONTACT', True)
         if lay == 0:
@@ -136,6 +143,7 @@ class basic:
         contact_cell.add(contact_shape)
         return contact_cell
 
+    @staticmethod
     def power_strip(w, h, offset=[0,0], lay=[5,6]):
         power_cell = gdspy.Cell("POWER", True)
         contact_num_w = int((w-2*basic.EN_VIA+basic.SP_VIA)/(basic.W_VIA+basic.SP_VIA))
@@ -159,12 +167,13 @@ class basic:
             m1_shape = gdspy.Rectangle((offset[0],offset[1]),(offset[0]+w,offset[1]+h),basic.layer[met_layer], basic.datatype[met_layer])
             power_cell.add(m1_shape)
             if i != lay[-1]:
-                contact_cell = contact(i)
+                contact_cell = basic.contact(i)
                 contact_array = gdspy.CellArray(contact_cell, contact_num_w, contact_num_h, [contact_space_w, contact_space_h], [x_offset, y_offset])
                 power_cell.add(contact_array)
         power_cell.flatten()
         return power_cell
 
+    @staticmethod
     def power_pin_init(ll, ur, startlay=2, stoplay=6):
         w = ur[0] - ll[0]
         h = ur[1] - ll[1]
@@ -212,7 +221,7 @@ class basic:
         init_cell.flatten()
         return init_cell
 
-
+    @staticmethod
     def metal_vert(w, h, lay=1): #usually w set to min_w['M1']
         met_layer = 'M' + str(lay)
         m1_cell = gdspy.Cell('M1_VERT', True)
@@ -255,6 +264,7 @@ class basic:
         m1_cell.flatten()
         return m1_cell
 
+    @staticmethod
     def metal_hori(w, h, lay=1): #usually h set to basic.min_w['M1']
         met_layer = 'M' + str(lay)
         m1_cell = gdspy.Cell('M1_HORI', True)
@@ -308,6 +318,7 @@ class basic:
 
 # Check all nwell functions if basic.min_w['M1'] > basic.NP_OD
 
+    @staticmethod
     def nwell_vert(h, dope='NP', remove=False, topmet=1): # w set to be minimal by definition
         nwell_vert = gdspy.Cell('NWELL_VERT', True)
         np_w = 2 * basic.NP_OD + basic.OD_W
@@ -324,6 +335,7 @@ class basic:
         nwell_vert.flatten()
         return nwell_vert
 
+    @staticmethod
     def nwell_hori(w, dope='NP', remove=False, topmet=1): # h set to be minimal by definition
         nwell_hori = gdspy.Cell('NWELL_HORI', True)
         np_h = 2 * basic.NP_OD + basic.OD_W
@@ -340,6 +352,7 @@ class basic:
         nwell_hori.flatten()
         return nwell_hori
 
+    @staticmethod
     def nwell_square(dope='NP', ext=[], topmet=1): # square cell to fill corners
         # ext: extend M1 0:North, 1:East, 2:South, 3:West
         nwell_square = gdspy.Cell('NWELL_SQUARE', True)
@@ -375,6 +388,7 @@ class basic:
         nwell_square.flatten()
         return nwell_square
 
+    @staticmethod
     def legal_well(ll, ur, origin=[0,0]):
         # Legalize ll and ur of basic.min_w well generation
         off = 0.5 * (basic.OD_W + basic.min_w['M1']) + basic.NW_OD
@@ -386,7 +400,7 @@ class basic:
         ur[1] = basic.legal_coord(ur, origin, 3)[1] - off + basic.min_w['M1']
         return ll, ur
         
-
+    @staticmethod
     def nwell_GR(ll, ur, origin=None, removeVert=False): 
         # ll is lower left, ur is upper right cordinate of mos PP layer
         # Default is to go up to M3
@@ -440,6 +454,7 @@ class basic:
             pin.add_shape('M1',[[m1_hori_1_x_2-basic.min_w['M1'],m1_hori_1_y_1],[m1_hori_1_x_2,m1_hori_1_y_2+basic.min_w['M1']]])
         return nwell_cell, pin
 
+    @staticmethod
     def sub_GR(ll, ur, origin=None, removeVert=False): 
         # ll is lower left, ur is upper right cordinate of mos PP layer
         pin = Pin('B')
@@ -490,6 +505,7 @@ class basic:
             pin.add_shape('M1',[[m1_hori_1_x_2-basic.min_w['M1'],m1_hori_1_y_1],[m1_hori_1_x_2,m1_hori_1_y_2+basic.min_w['M1']]])
         return nwell_cell, pin
 
+    @staticmethod
     def flip_cell(cell):
         flip_cell = gdspy.Cell(cell.name, True)
         bounding_box = cell.get_bounding_box()
@@ -512,12 +528,14 @@ class basic:
         flip_cell = flip_cell.flatten()
         return flip_cell
 
+    @staticmethod
     def check_legal_coord(coord, origin=[0,0]):
         if basic.legal(coord[0]-origin[0]) == coord[0]-origin[0] and basic.legal(coord[1]-origin[1]) == coord[1]-origin[1]:
             return True
         print(coord, origin)
         return False
 
+    @staticmethod
     def check_pin(pin, origin=[-0.5*min_w['M1'], -0.5*min_w['M1']]):
         for shape in pin.shape:
             if not basic.check_legal_coord(shape[1], origin):
