@@ -409,14 +409,20 @@ class Mosfet:
         if conType in ['GS','SG']:
             _, ll, _ = self.source.shape[0]
             _, _, ur = self.gate.shape[0]
-            x = self.origin[0] + (self.nf / 2) * self.gate_space
-            con = gdspy.Rectangle((x, ll[1]),(x+min_w['M1'], ur[1]), layer['M1'])
+            if self.nf == 1:
+                con = gdspy.Rectangle((ll[0], ll[1]),(ll[0]+min_w['M1'], ur[1]), layer['M1'])
+            else:
+                x = self.origin[0] + (self.nf / 2) * self.gate_space
+                con = gdspy.Rectangle((x, ll[1]),(x+min_w['M1'], ur[1]), layer['M1'])
             self.cell.add(con)
         elif conType in ['GD','DG']: 
             _, ll, _ = self.source.shape[0]
             _, _, ur = self.gate.shape[0]
-            x = self.origin[0] + (self.nf / 2) * self.gate_space
-            con = gdspy.Rectangle((x, ll[1]),(x+min_w['M1'], ur[1]), layer['M1'])
+            if self.nf == 1:
+                con = gdspy.Rectangle((ll[0], ll[1]),(ll[0]+min_w['M1'], ur[1]), layer['M1'])
+            else:
+                x = self.origin[0] + (self.nf / 2) * self.gate_space
+                con = gdspy.Rectangle((x, ll[1]),(x+min_w['M1'], ur[1]), layer['M1'])
             self.cell.add(con)
             # swap source/drain
             tempPin = self.source
