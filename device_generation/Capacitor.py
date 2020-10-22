@@ -77,8 +77,21 @@ class Capacitor:
             self.origin = None
         self.cell.flatten()
 
-    def to_gds(self, multiplier):
-        return self.cell.to_gds(multiplier)
+# Compatible with gdspy
+    def to_gds(self, *args):
+        """
+        @param first: outfile
+        @param second: multiplier
+        The reason for have varidic length of variables:
+        different versions of gdspy have different interfaces for this callback function.
+        What is silly is that the previous version is ( multiplier)
+        but the new version becomes (outfile, multiplier).
+        So it is not very suitable to just give the second argument a default None.
+        """
+        if len(args) == 1:
+            return self.cell.to_gds(args[0])
+        elif len(args) == 2:
+            return self.cell.to_gds(args[0], args[1])
 
     def finger_core(self):
 # MOMCAP Finger CORE

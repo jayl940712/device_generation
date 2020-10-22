@@ -59,9 +59,21 @@ class Resistor:
             self.origin = None
         self.cell.flatten()
 
-    def to_gds(self, multiplier):
-        #self.flatten()
-        return self.cell.to_gds(multiplier)
+# Compatible with gdspy
+    def to_gds(self, *args):
+        """
+        @param first: outfile
+        @param second: multiplier
+        The reason for have varidic length of variables:
+        different versions of gdspy have different interfaces for this callback function.
+        What is silly is that the previous version is ( multiplier)
+        but the new version becomes (outfile, multiplier).
+        So it is not very suitable to just give the second argument a default None.
+        """
+        if len(args) == 1:
+            return self.cell.to_gds(args[0])
+        elif len(args) == 2:
+            return self.cell.to_gds(args[0], args[1])
 
     def rpo_layer(self):
         rpo_shape = gdspy.Rectangle((self.rpdmy_x1, -ex['RPO']['PO']), (self.rpdmy_x2, self.cell_poly_w+ex['RPO']['PO']), layer['RPO'])
