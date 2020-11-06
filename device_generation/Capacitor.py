@@ -26,7 +26,7 @@ SP_SUB = 0.5 # Substrate contact to finger space
 W_SUB = min_w['M1'] #0.12 # Sub width
 
 class Capacitor:
-    def __init__(self, name, w, sp, nf, l, m_bot=3, m_top=5, attr=[], f_tip=0.14):
+    def __init__(self, name, w, sp, nf, l, m_bot=3, m_top=5, attr=[], f_tip=0.14, flatten=True):
         self.name = name
         self.w = w
         self.l = l
@@ -56,7 +56,8 @@ class Capacitor:
         else:
             self.lvs_layer()
         self.via_layer()
-        self.flatten()
+        if flatten:
+            self.flatten()
         #self.print_pins()
 
     def pin(self):
