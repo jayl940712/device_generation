@@ -245,11 +245,11 @@ class Mosfet:
                 self.drain.add_shape('M1', m1_drain_hori_ref.get_bounding_box())
             else:
                 self.drain.add_shape('M1', m1_drain_vert_ref.get_bounding_box())
-            #for i in range(self.nf+1):
-            #    if i % 2 == 0:
-            #        self.source.add_shape('M1', [[self.origin[0]+i*self.gate_space, self.origin[1]], [self.origin[0]+i*self.gate_space+min_w['M1'], self.w]])
-            #    else:
-            #        self.drain.add_shape('M1', [[self.origin[0]+i*self.gate_space, self.origin[1]], [self.origin[0]+i*self.gate_space+min_w['M1'], self.w]])
+            for i in range(self.nf+1):
+                if i % 2 == 0:
+                    self.source.add_shape('LI', [[self.origin[0]+i*self.gate_space, self.origin[1]], [self.origin[0]+i*self.gate_space+min_w['M1'], self.w]])
+                else:
+                    self.drain.add_shape('LI', [[self.origin[0]+i*self.gate_space, self.origin[1]], [self.origin[0]+i*self.gate_space+min_w['M1'], self.w]])
         #self.flatten()
     
     def nwell_gr(self):
@@ -351,19 +351,19 @@ class Mosfet:
             _, ll, _ = self.source.shape[0]
             _, _, ur = self.gate.shape[0]
             if self.nf == 1:
-                con = gdspy.Rectangle((ll[0], ll[1]),(ll[0]+min_w['M1'], ur[1]), layer['M1'])
+                con = gdspy.Rectangle((ll[0]+self.li_m1, 0),(ll[0]+self.li_m1+min_w['LI'], ur[1]-self.li_m1), layer['LI'], datatype['LI'])
             else:
                 x = self.origin[0] + (self.nf / 2) * self.gate_space
-                con = gdspy.Rectangle((x, ll[1]),(x+min_w['M1'], ur[1]), layer['M1'])
+                con = gdspy.Rectangle((x, ll[1]+self.li_m1),(x+min_w['M1'], ur[1]-self.li_m1), layer['LI'], datatype['LI'])
             self.cell.add(con)
         elif conType in ['GD','DG']: 
             _, ll, _ = self.source.shape[0]
             _, _, ur = self.gate.shape[0]
             if self.nf == 1:
-                con = gdspy.Rectangle((ll[0], ll[1]),(ll[0]+min_w['M1'], ur[1]), layer['M1'])
+                con = gdspy.Rectangle((ll[0]+self.li_m1, 0),(ll[0]+self.li_m1+min_w['LI'], ur[1]-self.li_m1), layer['LI'], datatype['LI'])
             else:
                 x = self.origin[0] + (self.nf / 2) * self.gate_space
-                con = gdspy.Rectangle((x, ll[1]),(x+min_w['M1'], ur[1]), layer['M1'])
+                con = gdspy.Rectangle((x, ll[1]+self.li_m1),(x+min_w['M1'], ur[1]-self.li_m1), layer['LI'], datatype['LI'])
             self.cell.add(con)
             # swap source/drain
             tempPin = self.source
@@ -373,13 +373,13 @@ class Mosfet:
             if self.nf == 1:
                 _, ll, _ = self.source.shape[0]
                 _, _, ur = self.drain.shape[0]
-                con1 = gdspy.Rectangle((ll[0], ll[1]),(ur[0], ll[1]+min_w['M1']), layer['M1'])
-                con2 = gdspy.Rectangle((ll[0], ur[1]-min_w['M1']),(ur[0], ur[1]), layer['M1'])
+                con1 = gdspy.Rectangle((ll[0], ll[1]),(ur[0], ll[1]+min_w['M1']), layer['M1'], datatype['M1'])
+                con2 = gdspy.Rectangle((ll[0], ur[1]-min_w['M1']),(ur[0], ur[1]), layer['M1'], datatype['M1'])
                 self.cell.add([con2])#,con2])
             else:
                 _, ll, _ = self.source.shape[1]
                 _, _, ur = self.source.shape[-1]
-                con = gdspy.Rectangle((ll[0], ll[1]),(ur[0], ll[1]+min_w['M1']), layer['M1'])
+                con = gdspy.Rectangle((ll[0]+self.li_m1, 0),(ur[0]-self.li_m1, min_w['LI']), layer['LI'], datatype['LI'])
                 self.cell.add(con)
 
     def bounding_box(self):
