@@ -39,7 +39,7 @@ class Mosfet:
         self.cell = gdspy.Cell(name, True)
         self.mos_core()
         self.doping_layer()
-        if 'lvt' in attr or self.nmos:
+        if 'lvt' in attr:
             self.vth_layer(True)
         if 'hvt' in attr:
             assert(not self.nmos), "HVT only valid for PMOS"
@@ -210,9 +210,9 @@ class Mosfet:
             m1_drain = gdspy.CellArray(m1_square_d, drain_count, 1, [2*self.gate_space, self.gate_space], [m1_array_offset+self.gate_space, -min_w['SP']+self.origin[1]])
             m1_source_hori_bb = [ [m1_array_offset, self.w+min_w['SP']], [m1_array_offset+(2*source_count-2)*self.gate_space+min_w['M1'], self.w+min_w['SP']+min_w['M1']] ]
             m1_drain_hori_bb = [ [m1_array_offset+self.gate_space, self.origin[1]-min_w['SP']-min_w['M1']], [m1_array_offset+(2*drain_count-1)*self.gate_space+min_w['M1'], self.origin[1]-min_w['SP']] ]
-            m1_source_hori = basic.metal_hori(m1_source_hori_bb[1][0]-m1_source_hori_bb[0][0], m1_source_hori_bb[1][1]-m1_source_hori_bb[0][1])
+            m1_source_hori = basic.metal_hori(m1_source_hori_bb[1][0]-m1_source_hori_bb[0][0], m1_source_hori_bb[1][1]-m1_source_hori_bb[0][1], licon=False)
             m1_source_hori_ref = gdspy.CellReference(m1_source_hori, m1_source_hori_bb[0])
-            m1_drain_hori= basic.metal_hori(m1_drain_hori_bb[1][0]-m1_drain_hori_bb[0][0], m1_drain_hori_bb[1][1]-m1_drain_hori_bb[0][1])
+            m1_drain_hori= basic.metal_hori(m1_drain_hori_bb[1][0]-m1_drain_hori_bb[0][0], m1_drain_hori_bb[1][1]-m1_drain_hori_bb[0][1], licon=False)
             m1_source_hori_ref = gdspy.CellReference(m1_source_hori, m1_source_hori_bb[0])
             m1_drain_hori_ref = gdspy.CellReference(m1_drain_hori, m1_drain_hori_bb[0])
             self.cell.add(m1_source)
@@ -290,7 +290,7 @@ class Mosfet:
         # For PMOS
         if not self.nmos:
             # Draw NW
-            nw_shape = gdspy.Rectangle(self.nw_ll, self.nw_ur, layer['NW'])
+            nw_shape = gdspy.Rectangle(self.nw_ll, self.nw_ur, layer['NW'], datatype['NW'])
             self.cell.add(nw_shape)
         #self.flatten()
 

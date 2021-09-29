@@ -18,9 +18,9 @@ class basic:
     GRID = glovar.GRID
 
 # Rules for VIAs
-    W_VIA = 0.05 
-    SP_VIA = 0.1
-    EN_VIA = 0.05 
+    W_VIA =  [-1, 0.15, 0.2, 0.2] 
+    SP_VIA = [-1, 0.17, 0.2, 0.2] 
+    EN_VIA = 0.2
 
     @staticmethod
     def block(inst):
@@ -141,7 +141,7 @@ class basic:
         elif lay == 0:
             contact_shape = gdspy.Rectangle((0, 0), (basic.min_w['CO'], basic.min_w['CO']), basic.layer['CO'], basic.datatype['CO'])
         else:
-            contact_shape = gdspy.Rectangle((0, 0), (basic.W_VIA, basic.W_VIA), basic.layer['VIA'+str(lay)], basic.datatype['VIA'+str(lay)])
+            contact_shape = gdspy.Rectangle((0, 0), (basic.W_VIA[lay], basic.W_VIA[lay]), basic.layer['VIA'+str(lay)], basic.datatype['VIA'+str(lay)])
         contact_cell.add(contact_shape)
         return contact_cell
 
@@ -242,7 +242,7 @@ class basic:
         return pm_cell
 
     @staticmethod
-    def metal_vert(w, h, lay=1): #usually w set to min_w['M1']
+    def metal_vert(w, h, lay=1, licon=True): #usually w set to min_w['M1']
         if lay >= 1:
             met_layer = 'M' + str(lay)
         else:
@@ -260,12 +260,12 @@ class basic:
             contact_num = int((h-2*basic.en['M1']['CO']+basic.sp['CO']['CO'])/(basic.min_w['CO']+basic.sp['CO']['CO']))
             contact_num_li = int((h-2*basic.en['LI']['LCO']+basic.sp['CO']['CO'])/(basic.min_w['CO']+basic.sp['CO']['CO']))
         else:
-            contact_num = int((h-2*basic.EN_VIA+basic.SP_VIA)/(basic.W_VIA+basic.SP_VIA))
+            contact_num = int((h-2*basic.EN_VIA+basic.SP_VIA[lay-1])/(basic.W_VIA[lay-1]+basic.SP_VIA[lay-1]))
         if contact_num == 1:
             if lay <= 1:
                 contact_space = basic.sp['CO']['CO']
             else:
-                contact_space = basic.SP_VIA
+                contact_space = basic.SP_VIA[lay-1]
         else:
             if lay <= 1:
                 contact_space = (h-2*basic.en['M1']['CO']-contact_num* basic.min_w['CO'])/(contact_num-1)+basic.min_w['CO']
@@ -273,10 +273,10 @@ class basic:
                     contact_num = contact_num - 1 
                     contact_space = (h-2*basic.en['M1']['CO']-contact_num*basic.min_w['CO'])/(contact_num-1)+basic.min_w['CO']
             else:
-                contact_space = (h-basic.EN_VIA-contact_num*basic.W_VIA)/(contact_num-1)+basic.W_VIA
-                if contact_space < basic.SP_VIA + basic.W_VIA:
+                contact_space = (h-basic.EN_VIA-contact_num*basic.W_VIA[lay-1])/(contact_num-1)+basic.W_VIA[lay-1]
+                if contact_space < basic.SP_VIA[lay-1] + basic.W_VIA[lay-1]:
                     contact_num = contact_num - 1 
-                    contact_space = (h-2*basic.EN_VIA-contact_num*basic.W_VIA)/(contact_num-1)+basic.W_VIA
+                    contact_space = (h-2*basic.EN_VIA-contact_num*basic.W_VIA[lay-1])/(contact_num-1)+basic.W_VIA[lay-1]
         contact_space = int(contact_space/basic.GRID)*basic.GRID  # to satisify manufactor grid
         if lay <= 1:
             if contact_num_li == 1:
@@ -296,8 +296,8 @@ class basic:
             x_offset_li = round(x_offset_li/basic.GRID)*basic.GRID
             y_offset_li = round(y_offset_li/basic.GRID)*basic.GRID
         else:
-            x_offset = (w-basic.W_VIA)*0.5
-            y_offset = (h - basic.W_VIA - contact_space*(contact_num-1))*0.5
+            x_offset = (w-basic.W_VIA[lay-1])*0.5
+            y_offset = (h - basic.W_VIA[lay-1] - contact_space*(contact_num-1))*0.5
         x_offset = round(x_offset/basic.GRID)*basic.GRID
         y_offset = round(y_offset/basic.GRID)*basic.GRID
         if lay >= 1:
@@ -306,12 +306,13 @@ class basic:
         if lay <= 1:
             contact_cell_li = basic.contact(-1)
             contact_array_li = gdspy.CellArray(contact_cell_li, 1, contact_num_li, [contact_space_li, contact_space_li], [x_offset_li, y_offset_li])
-            m1_cell.add(contact_array_li)
+            if licon:
+                m1_cell.add(contact_array_li)
         m1_cell.flatten()
         return m1_cell
 
     @staticmethod
-    def metal_hori(w, h, lay=1): #usually h set to basic.min_w['M1']
+    def metal_hori(w, h, lay=1, licon=True): #usually h set to basic.min_w['M1']
         met_layer = 'M' + str(lay)
         m1_cell = gdspy.Cell('M1_HORI', True)
         m1_shape = gdspy.Rectangle((0,0), (w,h), basic.layer[met_layer], basic.datatype[met_layer])
@@ -325,12 +326,12 @@ class basic:
             contact_num = int((w-2*basic.en['M1']['CO']+basic.sp['CO']['CO'])/(basic.min_w['CO']+basic.sp['CO']['CO']))
             contact_num_li = int((w-2*basic.en['LI']['LCO']+basic.sp['CO']['CO'])/(basic.min_w['CO']+basic.sp['CO']['CO']))
         else:
-            contact_num = int((w-2*basic.EN_VIA+basic.SP_VIA)/(basic.W_VIA+basic.SP_VIA))
+            contact_num = int((w-2*basic.EN_VIA+basic.SP_VIA[lay-1])/(basic.W_VIA[lay-1]+basic.SP_VIA[lay-1]))
         if contact_num == 1:
             if lay == 1:
                 contact_space = basic.sp['CO']['CO']
             else:
-                contact_space = basic.SP_VIA
+                contact_space = basic.SP_VIA[lay-1]
         else:
             if lay == 1:
                 contact_space = (w-2*basic.en['M1']['CO']-contact_num*basic.min_w['CO'])/(contact_num-1)+basic.min_w['CO']
@@ -338,10 +339,10 @@ class basic:
                     contact_num = contact_num - 1 
                     contact_space = (w-2*basic.en['M1']['CO']-contact_num*basic.min_w['CO'])/(contact_num-1)+basic.min_w['CO']
             else:
-                contact_space = (w-basic.EN_VIA-contact_num*basic.W_VIA)/(contact_num-1)+basic.W_VIA
-                if contact_space < basic.SP_VIA + basic.W_VIA:
+                contact_space = (w-basic.EN_VIA-contact_num*basic.W_VIA[lay-1])/(contact_num-1)+basic.W_VIA[lay-1]
+                if contact_space < basic.SP_VIA[lay-1] + basic.W_VIA[lay-1]:
                     contact_num = contact_num - 1 
-                    contact_space = (w-2*basic.EN_VIA-contact_num*basic.W_VIA)/(contact_num-1)+basic.W_VIA
+                    contact_space = (w-2*basic.EN_VIA-contact_num*basic.W_VIA[lay-1])/(contact_num-1)+basic.W_VIA[lay-1]
         if lay == 1:
             if contact_num_li == 1:
                 contact_space_li = basic.sp['CO']['CO']
@@ -361,8 +362,8 @@ class basic:
             x_offset_li = round(x_offset_li/basic.GRID)*basic.GRID
             y_offset_li = round(y_offset_li/basic.GRID)*basic.GRID
         else:
-            x_offset = (w - basic.W_VIA - contact_space*(contact_num-1)) * 0.5
-            y_offset = (h-basic.W_VIA) * 0.5
+            x_offset = (w - basic.W_VIA[lay-1] - contact_space*(contact_num-1)) * 0.5
+            y_offset = (h-basic.W_VIA[lay-1]) * 0.5
         x_offset = round(x_offset/basic.GRID)*basic.GRID
         y_offset = round(y_offset/basic.GRID)*basic.GRID
 
@@ -371,7 +372,8 @@ class basic:
         if lay == 1:
             contact_cell_li = basic.contact(-1)
             contact_array_li = gdspy.CellArray(contact_cell_li, contact_num_li, 1, [contact_space_li, contact_space_li], [x_offset_li, y_offset_li])
-            m1_cell.add(contact_array_li)
+            if licon:
+                m1_cell.add(contact_array_li)
         m1_cell.flatten()
         return m1_cell
 
@@ -381,9 +383,9 @@ class basic:
     def nwell_vert(h, dope='NP', remove=False, topmet=1): # w set to be minimal by definition
         nwell_vert = gdspy.Cell('NWELL_VERT', True)
         np_w = 2 * basic.NP_OD + basic.OD_W
-        np_shape = gdspy.Rectangle((0, 0), (np_w, h), basic.layer[dope])
+        np_shape = gdspy.Rectangle((0, 0), (np_w, h), basic.layer[dope], basic.datatype[dope])
         nwell_vert.add(np_shape)
-        od_shape = gdspy.Rectangle((basic.NP_OD, 0), (basic.NP_OD+basic.OD_W, h), basic.layer['OD'])
+        od_shape = gdspy.Rectangle((basic.NP_OD, 0), (basic.NP_OD+basic.OD_W, h), basic.layer['TAP'], basic.datatype['TAP'])
         nwell_vert.add(od_shape)
         # Legalization changes
         if not remove:
@@ -398,9 +400,9 @@ class basic:
     def nwell_hori(w, dope='NP', remove=False, topmet=1): # h set to be minimal by definition
         nwell_hori = gdspy.Cell('NWELL_HORI', True)
         np_h = 2 * basic.NP_OD + basic.OD_W
-        np_shape = gdspy.Rectangle((0, 0), (w, np_h), basic.layer[dope])
+        np_shape = gdspy.Rectangle((0, 0), (w, np_h), basic.layer[dope], basic.datatype[dope])
         nwell_hori.add(np_shape)
-        od_shape = gdspy.Rectangle((0, basic.NP_OD), (w, basic.NP_OD+basic.OD_W), basic.layer['OD'])
+        od_shape = gdspy.Rectangle((0, basic.NP_OD), (w, basic.NP_OD+basic.OD_W), basic.layer['TAP'], basic.datatype['TAP'])
         nwell_hori.add(od_shape)
         # Legalization changes
         if not remove:
@@ -415,7 +417,7 @@ class basic:
     def nwell_square(dope='NP', ext=[], topmet=1): # square cell to fill corners
         # ext: extend M1 0:North, 1:East, 2:South, 3:West
         nwell_square = gdspy.Cell('NWELL_SQUARE', True)
-        od_shape = gdspy.Rectangle((0,0), (basic.OD_W, basic.OD_W), basic.layer['OD'])
+        od_shape = gdspy.Rectangle((0,0), (basic.OD_W, basic.OD_W), basic.layer['TAP'], basic.datatype['TAP'])
         nwell_square.add(od_shape)
         # Legalization changes
         delta = 0.5*(basic.OD_W-basic.min_w['M1'])
@@ -442,7 +444,7 @@ class basic:
         #co_en = 0.5 * (basic.OD_W - basic.min_w['CO'])
         #co_shape = gdspy.Rectangle((co_en, co_en), (co_en+basic.min_w['CO'], co_en+basic.min_w['CO']), layer['CO'])
         #nwell_square.add(co_shape)
-        np_shape = gdspy.Rectangle((-basic.NP_OD, -basic.NP_OD), (basic.OD_W+basic.NP_OD, basic.OD_W+basic.NP_OD), basic.layer[dope])
+        np_shape = gdspy.Rectangle((-basic.NP_OD, -basic.NP_OD), (basic.OD_W+basic.NP_OD, basic.OD_W+basic.NP_OD), basic.layer[dope], basic.datatype[dope])
         nwell_square.add(np_shape)
         nwell_square.flatten()
         return nwell_square
@@ -472,7 +474,7 @@ class basic:
         cell_width = basic.NP_OD + basic.NW_OD + basic.OD_W
         nwell_vert_cell = basic.nwell_vert(height, remove=removeVert, topmet=1)
         nwell_hori_cell = basic.nwell_hori(width, remove=removeVert, topmet=1)
-        nwell_hori_bot =  basic.nwell_hori(width, topmet=6)
+        nwell_hori_bot =  basic.nwell_hori(width, topmet=4)
         nwell_vert_left = basic.nwell_vert(height, remove=True, topmet=1)
         nwell_hori_1 = gdspy.CellReference(nwell_hori_bot, (ll[0]-basic.NW_OD, ll[1]-cell_width))
         nwell_hori_2 = gdspy.CellReference(nwell_hori_cell, (ll[0]-basic.NW_OD, ur[1]+basic.NW_OD-basic.NP_OD))
@@ -484,21 +486,21 @@ class basic:
         nwell_cell.add(nwell_hori_2)
         s_dist = basic.NW_OD + basic.OD_W
         if not removeVert:
-            nwell_s_1 = gdspy.CellReference(basic.nwell_square('NP',[1],6), (ll[0]-s_dist, ll[1]-s_dist))
+            nwell_s_1 = gdspy.CellReference(basic.nwell_square('NP',[1],4), (ll[0]-s_dist, ll[1]-s_dist))
             nwell_s_2 = gdspy.CellReference(basic.nwell_square('NP',[1],1), (ll[0]-s_dist, ur[1]+basic.NW_OD))
-            nwell_s_3 = gdspy.CellReference(basic.nwell_square('NP',[0,3],6), (ur[0]+basic.NW_OD, ll[1]-s_dist))
+            nwell_s_3 = gdspy.CellReference(basic.nwell_square('NP',[0,3],4), (ur[0]+basic.NW_OD, ll[1]-s_dist))
             nwell_s_4 = gdspy.CellReference(basic.nwell_square('NP',[2,3],1), (ur[0]+basic.NW_OD, ur[1]+basic.NW_OD))
         else:
-            nwell_s_1 = gdspy.CellReference(basic.nwell_square('NP',[1],6), (ll[0]-s_dist, ll[1]-s_dist))
+            nwell_s_1 = gdspy.CellReference(basic.nwell_square('NP',[1],4), (ll[0]-s_dist, ll[1]-s_dist))
             nwell_s_2 = gdspy.CellReference(basic.nwell_square('NP',[],1), (ll[0]-s_dist, ur[1]+basic.NW_OD))
-            nwell_s_3 = gdspy.CellReference(basic.nwell_square('NP',[3],6), (ur[0]+basic.NW_OD, ll[1]-s_dist))
+            nwell_s_3 = gdspy.CellReference(basic.nwell_square('NP',[3],4), (ur[0]+basic.NW_OD, ll[1]-s_dist))
             nwell_s_4 = gdspy.CellReference(basic.nwell_square('NP',[],1), (ur[0]+basic.NW_OD, ur[1]+basic.NW_OD))
         nwell_cell.add(nwell_s_1)
         nwell_cell.add(nwell_s_2)
         nwell_cell.add(nwell_s_3)
         nwell_cell.add(nwell_s_4)
         cell_width = basic.OD_W + 2 * basic.NW_OD
-        nw_enclose = gdspy.Rectangle((ll[0]-cell_width, ll[1]-cell_width), (ur[0]+cell_width, ur[1]+cell_width), basic.layer['NW'])
+        nw_enclose = gdspy.Rectangle((ll[0]-cell_width, ll[1]-cell_width), (ur[0]+cell_width, ur[1]+cell_width), basic.layer['NW'], basic.datatype['NW'])
         nwell_cell.add(nw_enclose)
         nwell_cell.flatten()
         # Add pin shapes
@@ -506,7 +508,7 @@ class basic:
         m1_hori_1_y_1 = ll[1]-s_dist+0.5*(basic.OD_W-basic.min_w['M1'])
         m1_hori_1_x_2 = ur[0]+basic.NW_OD+0.5*(basic.OD_W+basic.min_w['M1'])
         m1_hori_1_y_2 = ur[1]+basic.NW_OD+0.5*(basic.OD_W-basic.min_w['M1'])
-        pin.add_shape('M6',[[m1_hori_1_x_1,m1_hori_1_y_1],[m1_hori_1_x_2,m1_hori_1_y_1+basic.min_w['M1']]])
+        pin.add_shape('M5',[[m1_hori_1_x_1,m1_hori_1_y_1],[m1_hori_1_x_2,m1_hori_1_y_1+basic.min_w['M1']]])
         if not removeVert:
             pin.add_shape('M1',[[m1_hori_1_x_1,m1_hori_1_y_2],[m1_hori_1_x_2,m1_hori_1_y_2+basic.min_w['M1']]])
             #pin.add_shape('M1',[[m1_hori_1_x_1,m1_hori_1_y_1],[m1_hori_1_x_1+basic.min_w['M1'],m1_hori_1_y_2+basic.min_w['M1']]])
@@ -526,7 +528,7 @@ class basic:
         nwell_vert_cell = basic.nwell_vert(height, 'PP', removeVert)
         nwell_vert_left = basic.nwell_vert(height, 'PP', removeVert)
         nwell_hori_cell = basic.nwell_hori(width, 'PP', removeVert)
-        nwell_hori_bot =  basic.nwell_hori(width, 'PP', False, 6)
+        nwell_hori_bot =  basic.nwell_hori(width, 'PP', False, 4)
         nwell_hori_1 = gdspy.CellReference(nwell_hori_bot, (ll[0]-basic.NW_OD, ll[1]-cell_width))
         nwell_hori_2 = gdspy.CellReference(nwell_hori_cell, (ll[0]-basic.NW_OD, ur[1]+basic.NW_OD-basic.NP_OD))
         nwell_vert_1 = gdspy.CellReference(nwell_vert_left, (ll[0]-cell_width, ll[1]-basic.NW_OD))
@@ -537,15 +539,15 @@ class basic:
         nwell_cell.add(nwell_hori_2)
         s_dist = basic.NW_OD + basic.OD_W
         if not removeVert:
-            nwell_s_1 = gdspy.CellReference(basic.nwell_square('PP',[0,1], 6), (ll[0]-s_dist, ll[1]-s_dist))
+            nwell_s_1 = gdspy.CellReference(basic.nwell_square('PP',[0,1], 4), (ll[0]-s_dist, ll[1]-s_dist))
             nwell_s_2 = gdspy.CellReference(basic.nwell_square('PP',[1,2]), (ll[0]-s_dist, ur[1]+basic.NW_OD))
-            nwell_s_3 = gdspy.CellReference(basic.nwell_square('PP',[0,3], 6), (ur[0]+basic.NW_OD, ll[1]-s_dist))
+            nwell_s_3 = gdspy.CellReference(basic.nwell_square('PP',[0,3], 4), (ur[0]+basic.NW_OD, ll[1]-s_dist))
             nwell_s_4 = gdspy.CellReference(basic.nwell_square('PP',[2,3]), (ur[0]+basic.NW_OD, ur[1]+basic.NW_OD))
 
         else:
-            nwell_s_1 = gdspy.CellReference(basic.nwell_square('PP',[1], 6), (ll[0]-s_dist, ll[1]-s_dist))
+            nwell_s_1 = gdspy.CellReference(basic.nwell_square('PP',[1], 4), (ll[0]-s_dist, ll[1]-s_dist))
             nwell_s_2 = gdspy.CellReference(basic.nwell_square('PP',[]), (ll[0]-s_dist, ur[1]+basic.NW_OD))
-            nwell_s_3 = gdspy.CellReference(basic.nwell_square('PP',[3], 6), (ur[0]+basic.NW_OD, ll[1]-s_dist))
+            nwell_s_3 = gdspy.CellReference(basic.nwell_square('PP',[3], 4), (ur[0]+basic.NW_OD, ll[1]-s_dist))
             nwell_s_4 = gdspy.CellReference(basic.nwell_square('PP',[]), (ur[0]+basic.NW_OD, ur[1]+basic.NW_OD))
         nwell_cell.add(nwell_s_1)
         nwell_cell.add(nwell_s_2)
