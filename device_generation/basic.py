@@ -419,6 +419,8 @@ class basic:
         nwell_square = gdspy.Cell('NWELL_SQUARE', True)
         od_shape = gdspy.Rectangle((0,0), (basic.OD_W, basic.OD_W), basic.layer['TAP'], basic.datatype['TAP'])
         nwell_square.add(od_shape)
+        od_shape = gdspy.Rectangle((0,0), (basic.OD_W, basic.OD_W), basic.layer['LI'], basic.datatype['LI'])
+        nwell_square.add(od_shape)
         # Legalization changes
         delta = 0.5*(basic.OD_W-basic.min_w['M1'])
         for i in range(topmet):
@@ -508,7 +510,7 @@ class basic:
         m1_hori_1_y_1 = ll[1]-s_dist+0.5*(basic.OD_W-basic.min_w['M1'])
         m1_hori_1_x_2 = ur[0]+basic.NW_OD+0.5*(basic.OD_W+basic.min_w['M1'])
         m1_hori_1_y_2 = ur[1]+basic.NW_OD+0.5*(basic.OD_W-basic.min_w['M1'])
-        pin.add_shape('M5',[[m1_hori_1_x_1,m1_hori_1_y_1],[m1_hori_1_x_2,m1_hori_1_y_1+basic.min_w['M1']]])
+        pin.add_shape('M4',[[m1_hori_1_x_1,m1_hori_1_y_1],[m1_hori_1_x_2,m1_hori_1_y_1+basic.min_w['M1']]])
         if not removeVert:
             pin.add_shape('M1',[[m1_hori_1_x_1,m1_hori_1_y_2],[m1_hori_1_x_2,m1_hori_1_y_2+basic.min_w['M1']]])
             #pin.add_shape('M1',[[m1_hori_1_x_1,m1_hori_1_y_1],[m1_hori_1_x_1+basic.min_w['M1'],m1_hori_1_y_2+basic.min_w['M1']]])
@@ -559,7 +561,7 @@ class basic:
         m1_hori_1_y_1 = ll[1]-s_dist+0.5*(basic.OD_W-basic.min_w['M1'])
         m1_hori_1_x_2 = ur[0]+basic.NW_OD+0.5*(basic.OD_W+basic.min_w['M1'])
         m1_hori_1_y_2 = ur[1]+basic.NW_OD+0.5*(basic.OD_W-basic.min_w['M1'])
-        pin.add_shape('M6',[[m1_hori_1_x_1,m1_hori_1_y_1],[m1_hori_1_x_2,m1_hori_1_y_1+basic.min_w['M1']]])
+        pin.add_shape('M4',[[m1_hori_1_x_1,m1_hori_1_y_1],[m1_hori_1_x_2,m1_hori_1_y_1+basic.min_w['M1']]])
         if not removeVert:
             pin.add_shape('M1',[[m1_hori_1_x_1,m1_hori_1_y_2],[m1_hori_1_x_2,m1_hori_1_y_2+basic.min_w['M1']]])
             #pin.add_shape('M1',[[m1_hori_1_x_1,m1_hori_1_y_1],[m1_hori_1_x_1+min_w['M1'],m1_hori_1_y_2+basic.min_w['M1']]])

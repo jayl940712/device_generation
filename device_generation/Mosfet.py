@@ -49,7 +49,7 @@ class Mosfet:
         self.connect_pin(pinConType)
         self.connect_pin_bulk()
         self.flatten()
-        #self.print_pins()
+        self.print_pins()
 
     def pin(self):
         # TODO Future version should include all shapes
@@ -201,15 +201,15 @@ class Mosfet:
             m1_square_s = gdspy.Cell('M1_SQUARE', True)
             m1_square_d = gdspy.Cell('M1_SQUARE', True)
             m1_sq_shape_s = gdspy.Rectangle((self.li_m1, 0), (min_w['LI']+self.li_m1, min_w['SP']+self.li_m1), layer['LI'], datatype['LI'])
-            m1_sq_shape_d = gdspy.Rectangle((self.li_m1, -self.li_m1), (min_w['LI']+self.li_m1, min_w['SP']+basic.legal_len(self.w)-self.w), layer['LI'], datatype['LI'])
+            m1_sq_shape_d = gdspy.Rectangle((self.li_m1, -self.li_m1), (min_w['LI']+self.li_m1, basic.legal_len(self.w)-self.w), layer['LI'], datatype['LI'])
             m1_square_s.add(m1_sq_shape_s)
             m1_square_d.add(m1_sq_shape_d)
             source_count = int(self.nf/2+1)
             drain_count = int((self.nf+1)/2)
             m1_source = gdspy.CellArray(m1_square_s, source_count, 1, [2*self.gate_space, self.gate_space], [m1_array_offset, self.w])
-            m1_drain = gdspy.CellArray(m1_square_d, drain_count, 1, [2*self.gate_space, self.gate_space], [m1_array_offset+self.gate_space, -min_w['SP']+self.origin[1]])
+            m1_drain = gdspy.CellArray(m1_square_d, drain_count, 1, [2*self.gate_space, self.gate_space], [m1_array_offset+self.gate_space, min_w['M1']+self.origin[1]])
             m1_source_hori_bb = [ [m1_array_offset, self.w+min_w['SP']], [m1_array_offset+(2*source_count-2)*self.gate_space+min_w['M1'], self.w+min_w['SP']+min_w['M1']] ]
-            m1_drain_hori_bb = [ [m1_array_offset+self.gate_space, self.origin[1]-min_w['SP']-min_w['M1']], [m1_array_offset+(2*drain_count-1)*self.gate_space+min_w['M1'], self.origin[1]-min_w['SP']] ]
+            m1_drain_hori_bb = [ [m1_array_offset+self.gate_space, self.origin[1]], [m1_array_offset+(2*drain_count-1)*self.gate_space+min_w['M1'], self.origin[1]+min_w['M1']] ]
             m1_source_hori = basic.metal_hori(m1_source_hori_bb[1][0]-m1_source_hori_bb[0][0], m1_source_hori_bb[1][1]-m1_source_hori_bb[0][1], licon=False)
             m1_source_hori_ref = gdspy.CellReference(m1_source_hori, m1_source_hori_bb[0])
             m1_drain_hori= basic.metal_hori(m1_drain_hori_bb[1][0]-m1_drain_hori_bb[0][0], m1_drain_hori_bb[1][1]-m1_drain_hori_bb[0][1], licon=False)
@@ -254,13 +254,13 @@ class Mosfet:
     
     def nwell_gr(self):
         if not self.nmos and NWELL_GR:
-            nwell_gr, self.bulk = basic.nwell_GR(self.cell.get_bounding_box()[0], self.cell.get_bounding_box()[1],self.origin, (1 not in self.bulkCon))    
+            nwell_gr, self.bulk = basic.nwell_GR(self.cell.get_bounding_box()[0], self.cell.get_bounding_box()[1],self.origin, True)
             #self.add_bulk_shape(nwell_gr.get_polygons(True)[(layer['M1'],0)])
             nwell_gr_ref = gdspy.CellReference(nwell_gr)
             self.cell.add(nwell_gr_ref)
             #self.flatten()
         if self.nmos and SUB_GR:
-            sub_gr, self.bulk = basic.sub_GR(self.cell.get_bounding_box()[0], self.cell.get_bounding_box()[1],self.origin, (1 not in self.bulkCon))    
+            sub_gr, self.bulk = basic.sub_GR(self.cell.get_bounding_box()[0], self.cell.get_bounding_box()[1],self.origin, True)
             #self.add_bulk_shape(sub_gr.get_polygons(True)[(layer['M1'],0)])
             sub_gr_ref = gdspy.CellReference(sub_gr)
             self.cell.add(sub_gr_ref)
@@ -297,7 +297,7 @@ class Mosfet:
     def print_pins(self):
         if not (self.drain.check() and self.gate.check() and self.source.check() and self.bulk.check()):
             print("Pin location not legal")
-        #print self.drain, self.gate, self.source, self.bulk
+        #print(self.drain, self.gate, self.source, self.bulk)
 
     def flip_vert(self):
         flip_cell = gdspy.Cell(self.cell.name, True)
@@ -328,20 +328,20 @@ class Mosfet:
     def connect_pin_bulk(self):
         # This is only valid for device with guard ring
         if 1 in self.bulkCon:
+            x = self.origin[0] + (self.nf / 2) * self.gate_space + self.li_m1
             _, ll, ur = self.gate.shape[0]
             _, _, ur_bulk = self.bulk.shape[1]
-            con1 = gdspy.Rectangle((ll[0], ur_bulk[1]-min_w['M1']),(ll[0]+min_w['M1'], ll[1]), layer['M1'])
-            con2 = gdspy.Rectangle((ur[0]-min_w['M1'], ur_bulk[1]-min_w['M1']),(ur[0], ll[1]), layer['M1'])
-            self.cell.add([con2])#,con2])
+            con = gdspy.Rectangle((x, ur_bulk[1]-min_w['M1']+self.li_m1),(x+min_w['LI'], ll[1]+self.li_m1), layer['LI'], datatype['LI'])
+            self.cell.add([con])
         if 2 in self.bulkCon:
             _, ll, _ = self.source.shape[0]
             _, _, ur_bulk = self.bulk.shape[0]
-            con = gdspy.Rectangle((ll[0], ur_bulk[1]-min_w['M1']),(ll[0]+min_w['M1'], ll[1]), layer['M1'])
+            con = gdspy.Rectangle((ll[0]+self.li_m1, ur_bulk[1]-min_w['M1']+self.li_m1),(ll[0]+min_w['M1']-self.li_m1, ll[1]-self.li_m1), layer['LI'], datatype['LI'])
             self.cell.add(con)
         if 0 in self.bulkCon:
             _, _, ur = self.drain.shape[0]
             _, _, ur_bulk = self.bulk.shape[0]
-            con = gdspy.Rectangle((ur[0]-min_w['M1'], ur_bulk[1]-min_w['M1']),(ur[0], ur[1]), layer['M1'])
+            con = gdspy.Rectangle((ur[0]-min_w['M1']+self.li_m1, ur_bulk[1]-min_w['M1']+self.li_m1),(ur[0]-self.li_m1, ur[1]-self.li_m1), layer['LI'], datatype['LI'])
             self.cell.add(con)
 
     def connect_pin(self, conType):
