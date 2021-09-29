@@ -419,8 +419,6 @@ class basic:
         nwell_square = gdspy.Cell('NWELL_SQUARE', True)
         od_shape = gdspy.Rectangle((0,0), (basic.OD_W, basic.OD_W), basic.layer['TAP'], basic.datatype['TAP'])
         nwell_square.add(od_shape)
-        od_shape = gdspy.Rectangle((0,0), (basic.OD_W, basic.OD_W), basic.layer['LI'], basic.datatype['LI'])
-        nwell_square.add(od_shape)
         # Legalization changes
         delta = 0.5*(basic.OD_W-basic.min_w['M1'])
         for i in range(topmet):
