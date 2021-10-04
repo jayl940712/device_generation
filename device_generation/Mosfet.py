@@ -244,7 +244,7 @@ class Mosfet:
             if drain_count > 1:
                 self.drain.add_shape('M1', m1_drain_hori_ref.get_bounding_box())
             else:
-                self.drain.add_shape('M1', m1_drain_vert_ref.get_bounding_box())
+                self.drain.add_shape('M1', m1_drain_vert_m1_shape.get_bounding_box())
             for i in range(self.nf+1):
                 if i % 2 == 0:
                     self.source.add_shape('LI', [[self.origin[0]+i*self.gate_space, self.origin[1]], [self.origin[0]+i*self.gate_space+min_w['M1'], self.w]])
@@ -296,7 +296,7 @@ class Mosfet:
 
     def print_pins(self):
         if not (self.drain.check() and self.gate.check() and self.source.check() and self.bulk.check()):
-            print("Pin location not legal")
+            print(self.name, "Pin location not legal")
         #print(self.drain, self.gate, self.source, self.bulk)
 
     def flip_vert(self):

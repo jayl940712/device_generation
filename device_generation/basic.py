@@ -148,23 +148,24 @@ class basic:
     @staticmethod
     def power_strip(w, h, offset=[0,0], lay=[5,6]):
         power_cell = gdspy.Cell("POWER", True)
-        contact_num_w = int((w-2*basic.EN_VIA+basic.SP_VIA)/(basic.W_VIA+basic.SP_VIA))
-        contact_num_h = int((h-2*basic.EN_VIA+basic.SP_VIA)/(basic.W_VIA+basic.SP_VIA))
-        contact_space_w = (w-basic.EN_VIA-contact_num_w*basic.W_VIA)/(contact_num_w-1)+basic.W_VIA
-        contact_space_h = (h-basic.EN_VIA-contact_num_h*basic.W_VIA)/(contact_num_h-1)+basic.W_VIA
-        if contact_space_w < basic.SP_VIA + basic.W_VIA:
-            contact_num_w = contact_num_w - 1 
-            contact_space_w = (h-2*basic.EN_VIA-contact_num_w*basic.W_VIA)/(contact_num_w-1)+basic.W_VIA
-        if contact_space_h < basic.SP_VIA + basic.W_VIA:
-            contact_num_h = contact_num_h - 1 
-            contact_space_h = (h-2*basic.EN_VIA-contact_num_h*basic.W_VIA)/(contact_num_h-1)+basic.W_VIA
-        contact_space_h = int(contact_space_h/basic.GRID)*basic.GRID  
-        contact_space_w = int(contact_space_w/basic.GRID)*basic.GRID  
-        x_offset = (w-basic.W_VIA-contact_space_w*(contact_num_w-1))*0.5 + offset[0]
-        y_offset = (h-basic.W_VIA-contact_space_h*(contact_num_h-1))*0.5 + offset[1]
-        x_offset = int(x_offset/basic.GRID)*basic.GRID
-        y_offset = int(y_offset/basic.GRID)*basic.GRID
         for i in lay:
+            contact_num_w = int((w-2*basic.EN_VIA+basic.SP_VIA[i-1])/(basic.W_VIA[i-1]+basic.SP_VIA[i-1]))
+            contact_num_h = int((h-2*basic.EN_VIA+basic.SP_VIA[i-1])/(basic.W_VIA[i-1]+basic.SP_VIA[i-1]))
+            contact_space_w = (w-basic.EN_VIA-contact_num_w*basic.W_VIA[i-1])/(contact_num_w-1)+basic.W_VIA[i-1]
+            contact_space_h = (h-basic.EN_VIA-contact_num_h*basic.W_VIA[i-1])/(contact_num_h-1)+basic.W_VIA[i-1]
+            if contact_space_w < basic.SP_VIA[i-1] + basic.W_VIA[i-1]:
+                contact_num_w = contact_num_w - 1 
+                contact_space_w = (h-2*basic.EN_VIA-contact_num_w*basic.W_VIA[i-1])/(contact_num_w-1)+basic.W_VIA[i-1]
+            if contact_space_h < basic.SP_VIA[i-1] + basic.W_VIA[i-1]:
+                contact_num_h = contact_num_h - 1 
+                contact_space_h = (h-2*basic.EN_VIA-contact_num_h*basic.W_VIA[i-1])/(contact_num_h-1)+basic.W_VIA[i-1]
+            contact_space_h = int(contact_space_h/basic.GRID)*basic.GRID  
+            contact_space_w = int(contact_space_w/basic.GRID)*basic.GRID  
+            x_offset = (w-basic.W_VIA[i-1]-contact_space_w*(contact_num_w-1))*0.5 + offset[0]
+            y_offset = (h-basic.W_VIA[i-1]-contact_space_h*(contact_num_h-1))*0.5 + offset[1]
+            x_offset = int(x_offset/basic.GRID)*basic.GRID
+            y_offset = int(y_offset/basic.GRID)*basic.GRID
+
             met_layer = 'M' + str(i)
             m1_shape = gdspy.Rectangle((offset[0],offset[1]),(offset[0]+w,offset[1]+h),basic.layer[met_layer], basic.datatype[met_layer])
             power_cell.add(m1_shape)
@@ -176,44 +177,45 @@ class basic:
         return power_cell
 
     @staticmethod
-    def power_pin_init(ll, ur, startlay=2, stoplay=6):
+    def power_pin_init(ll, ur, startlay=2, stoplay=3):
         w = ur[0] - ll[0]
         h = ur[1] - ll[1]
         offset = ll
         init_cell = gdspy.Cell("POWER", True)
-        contact_num_w = int((w-2*basic.EN_VIA+basic.SP_VIA)/(basic.W_VIA+basic.SP_VIA))
-        contact_num_h = int((h-2*basic.EN_VIA+basic.SP_VIA)/(basic.W_VIA+basic.SP_VIA))
-        if contact_num_w <= 1:
-            contact_num_w = 1
-            contact_space_w = basic.SP_VIA + basic.W_VIA
-        else:
-            contact_space_w = (w-basic.EN_VIA-contact_num_w*basic.W_VIA)/(contact_num_w-1)+basic.W_VIA
-        if contact_num_h <= 1:
-            contact_num_h = 1
-            contact_space_h = basic.SP_VIA + basic.W_VIA
-        else:
-            contact_space_h = (h-basic.EN_VIA-contact_num_h*basic.W_VIA)/(contact_num_h-1)+basic.W_VIA
-        if contact_space_w < basic.SP_VIA + basic.W_VIA:
-            contact_num_w = contact_num_w - 1 
+        for i in range(startlay, stoplay+1):
+            contact_num_w = int((w-2*basic.EN_VIA+basic.SP_VIA[i-1])/(basic.W_VIA[i-1]+basic.SP_VIA[i-1]))
+            contact_num_h = int((h-2*basic.EN_VIA+basic.SP_VIA[i-1])/(basic.W_VIA[i-1]+basic.SP_VIA[i-1]))
             if contact_num_w <= 1:
                 contact_num_w = 1
-                contact_space_w = basic.SP_VIA + basic.W_VIA
+                contact_space_w = basic.SP_VIA[i-1] + basic.W_VIA[i-1]
             else:
-                contact_space_w = (h-2*basic.EN_VIA-contact_num_w*basic.W_VIA)/(contact_num_w-1)+basic.W_VIA
-        if contact_space_h < basic.SP_VIA + basic.W_VIA:
-            contact_num_h = contact_num_h - 1 
+                contact_space_w = (w-basic.EN_VIA-contact_num_w*basic.W_VIA[i-1])/(contact_num_w-1)+basic.W_VIA[i-1]
             if contact_num_h <= 1:
                 contact_num_h = 1
-                contact_space_h = basic.SP_VIA + basic.W_VIA
+                contact_space_h = basic.SP_VIA[i-1] + basic.W_VIA[i-1]
             else:
-                contact_space_h = (h-2*basic.EN_VIA-contact_num_h*basic.W_VIA)/(contact_num_h-1)+basic.W_VIA
-        contact_space_h = int(contact_space_h/basic.GRID)*basic.GRID  
-        contact_space_w = int(contact_space_w/basic.GRID)*basic.GRID  
-        x_offset = (w-basic.W_VIA-contact_space_w*(contact_num_w-1))*0.5 + offset[0]
-        y_offset = (h-basic.W_VIA-contact_space_h*(contact_num_h-1))*0.5 + offset[1]
-        x_offset = int(x_offset/basic.GRID)*basic.GRID
-        y_offset = int(y_offset/basic.GRID)*basic.GRID
-        for i in range(startlay, stoplay+1):
+                contact_space_h = (h-basic.EN_VIA-contact_num_h*basic.W_VIA[i-1])/(contact_num_h-1)+basic.W_VIA[i-1]
+            if contact_space_w < basic.SP_VIA[i-1] + basic.W_VIA[i-1]:
+                contact_num_w = contact_num_w - 1 
+                if contact_num_w <= 1:
+                    contact_num_w = 1
+                    contact_space_w = basic.SP_VIA[i-1] + basic.W_VIA[i-1]
+                else:
+                    contact_space_w = (h-2*basic.EN_VIA-contact_num_w*basic.W_VIA[i-1])/(contact_num_w-1)+basic.W_VIA[i-1]
+            if contact_space_h < basic.SP_VIA[i-1] + basic.W_VIA[i-1]:
+                contact_num_h = contact_num_h - 1 
+                if contact_num_h <= 1:
+                    contact_num_h = 1
+                    contact_space_h = basic.SP_VIA[i-1] + basic.W_VIA[i-1]
+                else:
+                    contact_space_h = (h-2*basic.EN_VIA-contact_num_h*basic.W_VIA[i-1])/(contact_num_h-1)+basic.W_VIA[i-1]
+            contact_space_h = int(contact_space_h/basic.GRID)*basic.GRID  
+            contact_space_w = int(contact_space_w/basic.GRID)*basic.GRID  
+            x_offset = (w-basic.W_VIA[i-1]-contact_space_w*(contact_num_w-1))*0.5 + offset[0]
+            y_offset = (h-basic.W_VIA[i-1]-contact_space_h*(contact_num_h-1))*0.5 + offset[1]
+            x_offset = int(x_offset/basic.GRID)*basic.GRID
+            y_offset = int(y_offset/basic.GRID)*basic.GRID
+        
             met_layer = 'M' + str(i)
             m1_shape = gdspy.Rectangle((offset[0],offset[1]),(offset[0]+w,offset[1]+h),basic.layer[met_layer], basic.datatype[met_layer])
             init_cell.add(m1_shape)
