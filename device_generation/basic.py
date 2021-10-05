@@ -159,12 +159,12 @@ class basic:
             if contact_space_h < basic.SP_VIA[i-1] + basic.W_VIA[i-1]:
                 contact_num_h = contact_num_h - 1 
                 contact_space_h = (h-2*basic.EN_VIA-contact_num_h*basic.W_VIA[i-1])/(contact_num_h-1)+basic.W_VIA[i-1]
-            contact_space_h = int(contact_space_h/basic.GRID)*basic.GRID  
-            contact_space_w = int(contact_space_w/basic.GRID)*basic.GRID  
+            contact_space_h = round(contact_space_h/basic.GRID)*basic.GRID  
+            contact_space_w = round(contact_space_w/basic.GRID)*basic.GRID  
             x_offset = (w-basic.W_VIA[i-1]-contact_space_w*(contact_num_w-1))*0.5 + offset[0]
             y_offset = (h-basic.W_VIA[i-1]-contact_space_h*(contact_num_h-1))*0.5 + offset[1]
-            x_offset = int(x_offset/basic.GRID)*basic.GRID
-            y_offset = int(y_offset/basic.GRID)*basic.GRID
+            x_offset = round(x_offset/basic.GRID)*basic.GRID
+            y_offset = round(y_offset/basic.GRID)*basic.GRID
 
             met_layer = 'M' + str(i)
             m1_shape = gdspy.Rectangle((offset[0],offset[1]),(offset[0]+w,offset[1]+h),basic.layer[met_layer], basic.datatype[met_layer])
@@ -209,12 +209,12 @@ class basic:
                     contact_space_h = basic.SP_VIA[i-1] + basic.W_VIA[i-1]
                 else:
                     contact_space_h = (h-2*basic.EN_VIA-contact_num_h*basic.W_VIA[i-1])/(contact_num_h-1)+basic.W_VIA[i-1]
-            contact_space_h = int(contact_space_h/basic.GRID)*basic.GRID  
-            contact_space_w = int(contact_space_w/basic.GRID)*basic.GRID  
+            contact_space_h = round(contact_space_h/basic.GRID)*basic.GRID  
+            contact_space_w = round(contact_space_w/basic.GRID)*basic.GRID  
             x_offset = (w-basic.W_VIA[i-1]-contact_space_w*(contact_num_w-1))*0.5 + offset[0]
             y_offset = (h-basic.W_VIA[i-1]-contact_space_h*(contact_num_h-1))*0.5 + offset[1]
-            x_offset = int(x_offset/basic.GRID)*basic.GRID
-            y_offset = int(y_offset/basic.GRID)*basic.GRID
+            x_offset = round(x_offset/basic.GRID)*basic.GRID
+            y_offset = round(y_offset/basic.GRID)*basic.GRID
         
             met_layer = 'M' + str(i)
             m1_shape = gdspy.Rectangle((offset[0],offset[1]),(offset[0]+w,offset[1]+h),basic.layer[met_layer], basic.datatype[met_layer])
@@ -545,7 +545,16 @@ class basic:
             nwell_s_2 = gdspy.CellReference(basic.nwell_square('PP',[1,2]), (ll[0]-s_dist, ur[1]+basic.NW_OD))
             nwell_s_3 = gdspy.CellReference(basic.nwell_square('PP',[0,3], 4), (ur[0]+basic.NW_OD, ll[1]-s_dist))
             nwell_s_4 = gdspy.CellReference(basic.nwell_square('PP',[2,3]), (ur[0]+basic.NW_OD, ur[1]+basic.NW_OD))
-
+            li_offset = 0.5*(basic.min_w['LI']-basic.OD_W)
+            xx1 = ll[0]-s_dist-li_offset
+            yy1 = ll[1]-s_dist-li_offset
+            nwell_cell.add(gdspy.Rectangle([xx1,yy1],[xx1+basic.min_w['LI'],yy1+basic.min_w['LI']],basic.layer['LI'],basic.datatype['LI']))
+            yy1 = ur[1]+basic.NW_OD-li_offset
+            nwell_cell.add(gdspy.Rectangle([xx1,yy1],[xx1+basic.min_w['LI'],yy1+basic.min_w['LI']],basic.layer['LI'],basic.datatype['LI']))
+            xx1 = ur[0]+basic.NW_OD-li_offset
+            nwell_cell.add(gdspy.Rectangle([xx1,yy1],[xx1+basic.min_w['LI'],yy1+basic.min_w['LI']],basic.layer['LI'],basic.datatype['LI']))
+            yy1 = ll[1]-s_dist-li_offset
+            nwell_cell.add(gdspy.Rectangle([xx1,yy1],[xx1+basic.min_w['LI'],yy1+basic.min_w['LI']],basic.layer['LI'],basic.datatype['LI']))
         else:
             nwell_s_1 = gdspy.CellReference(basic.nwell_square('PP',[1], 4), (ll[0]-s_dist, ll[1]-s_dist))
             nwell_s_2 = gdspy.CellReference(basic.nwell_square('PP',[]), (ll[0]-s_dist, ur[1]+basic.NW_OD))
