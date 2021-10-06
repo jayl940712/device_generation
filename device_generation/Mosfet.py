@@ -334,9 +334,9 @@ class Mosfet:
             con = gdspy.Rectangle((x, ur_bulk[1]-min_w['M1']+self.li_m1),(x+min_w['LI'], ll[1]+self.li_m1), layer['LI'], datatype['LI'])
             self.cell.add([con])
         if 2 in self.bulkCon:
-            _, ll, _ = self.source.shape[0]
+            _, _, ur = self.source.shape[0]
             _, _, ur_bulk = self.bulk.shape[0]
-            con = gdspy.Rectangle((ll[0]+self.li_m1, ur_bulk[1]-min_w['M1']+self.li_m1),(ll[0]+min_w['M1']-self.li_m1, ll[1]-self.li_m1), layer['LI'], datatype['LI'])
+            con = gdspy.Rectangle((ur[0]-min_w['M1']+self.li_m1, ur_bulk[1]-min_w['M1']+self.li_m1),(ur[0]-self.li_m1, ur[1]), layer['LI'], datatype['LI'])
             self.cell.add(con)
         if 0 in self.bulkCon:
             _, _, ur = self.drain.shape[0]
