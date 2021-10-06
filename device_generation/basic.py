@@ -20,7 +20,7 @@ class basic:
 # Rules for VIAs
     W_VIA =  [-1, 0.15, 0.2, 0.2] 
     SP_VIA = [-1, 0.17, 0.2, 0.2] 
-    EN_VIA = 0.2
+    EN_VIA = 0.3
 
     @staticmethod
     def block(inst):
@@ -292,7 +292,7 @@ class basic:
         # Offset Center
         if lay <= 1:
             x_offset = (w-basic.min_w['CO'])*0.5
-            y_offset = (h - basic.min_w['CO'] - contact_space*(contact_num-1))*0.5
+            y_offset = (h - basic.min_w['CO'] - contact_space*(contact_num-1) )*0.5
             x_offset_li = (w-basic.min_w['CO'])*0.5
             y_offset_li = (h - basic.min_w['CO'] - contact_space_li*(contact_num_li-1))*0.5
             x_offset_li = round(x_offset_li/basic.GRID)*basic.GRID
@@ -520,21 +520,25 @@ class basic:
     @staticmethod
     def sub_GR(ll, ur, origin=None, removeVert=False): 
         # ll is lower left, ur is upper right cordinate of mos PP layer
+        EN_M1_CO = basic.en['M1']['CO']
+        basic.en['M1']['CO'] = basic.min_w['M1']
         pin = Pin('B')
         if origin:
             ll, ur = basic.legal_well(ll, ur, origin)
         nwell_cell = gdspy.Cell('SUB_GR', True)
         width = ur[0] - ll[0] + 2 * basic.NW_OD
-        height = ur[1] - ll[1] + 2 * basic.NW_OD
-        cell_width = basic.NP_OD + basic.NW_OD + basic.OD_W
+        height = ur[1] - ll[1]  + 2 * basic.NW_OD
         nwell_vert_cell = basic.nwell_vert(height, 'PP', removeVert)
         nwell_vert_left = basic.nwell_vert(height, 'PP', removeVert)
         nwell_hori_cell = basic.nwell_hori(width, 'PP', removeVert)
         nwell_hori_bot =  basic.nwell_hori(width, 'PP', False, 4)
+        cell_width = basic.NP_OD + basic.NW_OD + basic.OD_W 
         nwell_hori_1 = gdspy.CellReference(nwell_hori_bot, (ll[0]-basic.NW_OD, ll[1]-cell_width))
         nwell_hori_2 = gdspy.CellReference(nwell_hori_cell, (ll[0]-basic.NW_OD, ur[1]+basic.NW_OD-basic.NP_OD))
         nwell_vert_1 = gdspy.CellReference(nwell_vert_left, (ll[0]-cell_width, ll[1]-basic.NW_OD))
         nwell_vert_2 = gdspy.CellReference(nwell_vert_cell, (ur[0]+basic.NW_OD-basic.NP_OD, ll[1]-basic.NW_OD))
+        nwell_vert_met = gdspy.Rectangle((0,0),(width,basic.min_w['M1']),basic.layer['M1'],basic.datatype['M1'])
+        nwell_hori_met = gdspy.Rectangle((0,0),(basic.min_w['M1'],height),basic.layer['M1'],basic.datatype['M1'])
         nwell_cell.add(nwell_vert_1)
         nwell_cell.add(nwell_vert_2)
         nwell_cell.add(nwell_hori_1)
@@ -575,6 +579,7 @@ class basic:
             pin.add_shape('M1',[[m1_hori_1_x_1,m1_hori_1_y_2],[m1_hori_1_x_2,m1_hori_1_y_2+basic.min_w['M1']]])
             #pin.add_shape('M1',[[m1_hori_1_x_1,m1_hori_1_y_1],[m1_hori_1_x_1+min_w['M1'],m1_hori_1_y_2+basic.min_w['M1']]])
             pin.add_shape('M1',[[m1_hori_1_x_2-basic.min_w['M1'],m1_hori_1_y_1],[m1_hori_1_x_2,m1_hori_1_y_2+basic.min_w['M1']]])
+        basic.en['M1']['CO'] = EN_M1_CO
         return nwell_cell, pin
 
     @staticmethod

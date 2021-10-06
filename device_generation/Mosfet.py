@@ -144,7 +144,7 @@ class Mosfet:
                 x_pos = 0.5*(width-self.l) 
                 y_pos = self.w + self.gate_ext_len - 0.5 * (min_w['CO'] + 2*en['PO']['CO'] - min_w['M1'])
                 # Legalization added con_shape
-                gate_con_shape = gdspy.Rectangle((0, self.w), (self.l, y_pos), layer['PO'], datatype['PO'])
+                gate_con_shape = gdspy.Rectangle((0, self.w), (self.l, y_pos+en['PO']['CO']), layer['PO'], datatype['PO'])
                 self.cell.add(gate_con_shape)
                 # Legalization for top metal
                 y_pos = y_pos + en['PO']['CO']-0.5*(min_w['M1']-min_w['CO'])
@@ -181,7 +181,7 @@ class Mosfet:
             gate_extension = gdspy.Cell('GATE_EXT', True)
             # Modified for legal
             self.gate_ext_len = 2 * min_w['SP'] + min_w['M1']
-            gate_ext_shape = gdspy.Rectangle((0, self.w), (self.l, self.w+self.gate_ext_len), layer['PO'], datatype['PO'])
+            gate_ext_shape = gdspy.Rectangle((0, self.w), (self.l, self.w+self.gate_ext_len+en['PO']['CO']), layer['PO'], datatype['PO'])
             gate_extension.add(gate_ext_shape)
             gate_extension_array = gdspy.CellArray(gate_extension, self.nf, 1, [self.gate_space, self.gate_space])
             self.cell.add(gate_extension_array)
@@ -201,15 +201,15 @@ class Mosfet:
             m1_square_s = gdspy.Cell('M1_SQUARE', True)
             m1_square_d = gdspy.Cell('M1_SQUARE', True)
             m1_sq_shape_s = gdspy.Rectangle((self.li_m1, 0), (min_w['LI']+self.li_m1, min_w['SP']+self.li_m1), layer['LI'], datatype['LI'])
-            m1_sq_shape_d = gdspy.Rectangle((self.li_m1, -self.li_m1), (min_w['LI']+self.li_m1, basic.legal_len(self.w)-self.w), layer['LI'], datatype['LI'])
+            m1_sq_shape_d = gdspy.Rectangle((self.li_m1, -self.li_m1), (min_w['LI']+self.li_m1, min_w['SP']+basic.legal_len(self.w)-self.w), layer['LI'], datatype['LI'])
             m1_square_s.add(m1_sq_shape_s)
             m1_square_d.add(m1_sq_shape_d)
             source_count = int(self.nf/2+1)
             drain_count = int((self.nf+1)/2)
             m1_source = gdspy.CellArray(m1_square_s, source_count, 1, [2*self.gate_space, self.gate_space], [m1_array_offset, self.w])
-            m1_drain = gdspy.CellArray(m1_square_d, drain_count, 1, [2*self.gate_space, self.gate_space], [m1_array_offset+self.gate_space, min_w['M1']+self.origin[1]])
+            m1_drain = gdspy.CellArray(m1_square_d, drain_count, 1, [2*self.gate_space, self.gate_space], [m1_array_offset+self.gate_space, -min_w['M1']+self.origin[1]])
             m1_source_hori_bb = [ [m1_array_offset, self.w+min_w['SP']], [m1_array_offset+(2*source_count-2)*self.gate_space+min_w['M1'], self.w+min_w['SP']+min_w['M1']] ]
-            m1_drain_hori_bb = [ [m1_array_offset+self.gate_space, self.origin[1]], [m1_array_offset+(2*drain_count-1)*self.gate_space+min_w['M1'], self.origin[1]+min_w['M1']] ]
+            m1_drain_hori_bb = [ [m1_array_offset+self.gate_space, self.origin[1]-min_w['SP']-min_w['M1']], [m1_array_offset+(2*drain_count-1)*self.gate_space+min_w['M1'], self.origin[1]-min_w['SP']] ]
             m1_source_hori = basic.metal_hori(m1_source_hori_bb[1][0]-m1_source_hori_bb[0][0], m1_source_hori_bb[1][1]-m1_source_hori_bb[0][1], licon=False)
             m1_source_hori_ref = gdspy.CellReference(m1_source_hori, m1_source_hori_bb[0])
             m1_drain_hori= basic.metal_hori(m1_drain_hori_bb[1][0]-m1_drain_hori_bb[0][0], m1_drain_hori_bb[1][1]-m1_drain_hori_bb[0][1], licon=False)
@@ -341,7 +341,7 @@ class Mosfet:
         if 0 in self.bulkCon:
             _, _, ur = self.drain.shape[0]
             _, _, ur_bulk = self.bulk.shape[0]
-            con = gdspy.Rectangle((ur[0]-min_w['M1']+self.li_m1, ur_bulk[1]-min_w['M1']+self.li_m1),(ur[0]-self.li_m1, ur[1]-self.li_m1), layer['LI'], datatype['LI'])
+            con = gdspy.Rectangle((ur[0]-min_w['M1']+self.li_m1, ur_bulk[1]-min_w['M1']+self.li_m1),(ur[0]-self.li_m1, ur[1]), layer['LI'], datatype['LI'])
             self.cell.add(con)
 
     def connect_pin(self, conType):

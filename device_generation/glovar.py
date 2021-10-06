@@ -70,7 +70,7 @@ class tsmc40_glovar:
     sp['M1']['M1'] = 0.15 
     en = dict()
     en['M1'] = dict()
-    en['M1']['CO'] = 0.03 
+    en['M1']['CO'] = 0.03
     en['OD'] = dict()
     en['OD']['PO'] = 0.10
     en['OD']['CO'] = 0.06
