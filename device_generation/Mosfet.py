@@ -352,6 +352,8 @@ class Mosfet:
             _, _, ur = self.gate.shape[0]
             if self.nf == 1:
                 con = gdspy.Rectangle((ll[0]+self.li_m1, 0),(ll[0]+self.li_m1+min_w['LI'], ur[1]-self.li_m1), layer['LI'], datatype['LI'])
+                patch = gdspy.Rectangle((ll[0]+self.li_m1, ur[1]-min_w['M1']+en['M1']['CO']), (ll[0]+min_w['M1'], ur[1]-min_w['M1']+en['M1']['CO']+min_w['LI']), layer['LI'], datatype['LI'])
+                self.cell.add(patch)
             else:
                 x = self.origin[0] + (self.nf / 2) * self.gate_space
                 con = gdspy.Rectangle((x, ll[1]+self.li_m1),(x+min_w['M1'], ur[1]-self.li_m1), layer['LI'], datatype['LI'])
@@ -361,6 +363,8 @@ class Mosfet:
             _, _, ur = self.gate.shape[0]
             if self.nf == 1:
                 con = gdspy.Rectangle((ll[0]+self.li_m1, 0),(ll[0]+self.li_m1+min_w['LI'], ur[1]-self.li_m1), layer['LI'], datatype['LI'])
+                patch = gdspy.Rectangle((ll[0]+self.li_m1, ur[1]-min_w['M1']+en['M1']['CO']), (ll[0]+min_w['M1'], ur[1]-min_w['M1']+en['M1']['CO']+min_w['LI']), layer['LI'], datatype['LI'])
+                self.cell.add(patch)
             else:
                 x = self.origin[0] + (self.nf / 2) * self.gate_space
                 con = gdspy.Rectangle((x, ll[1]+self.li_m1),(x+min_w['M1'], ur[1]-self.li_m1), layer['LI'], datatype['LI'])
