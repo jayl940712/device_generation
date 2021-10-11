@@ -537,8 +537,6 @@ class basic:
         nwell_hori_2 = gdspy.CellReference(nwell_hori_cell, (ll[0]-basic.NW_OD, ur[1]+basic.NW_OD-basic.NP_OD))
         nwell_vert_1 = gdspy.CellReference(nwell_vert_left, (ll[0]-cell_width, ll[1]-basic.NW_OD))
         nwell_vert_2 = gdspy.CellReference(nwell_vert_cell, (ur[0]+basic.NW_OD-basic.NP_OD, ll[1]-basic.NW_OD))
-        nwell_vert_met = gdspy.Rectangle((0,0),(width,basic.min_w['M1']),basic.layer['M1'],basic.datatype['M1'])
-        nwell_hori_met = gdspy.Rectangle((0,0),(basic.min_w['M1'],height),basic.layer['M1'],basic.datatype['M1'])
         nwell_cell.add(nwell_vert_1)
         nwell_cell.add(nwell_vert_2)
         nwell_cell.add(nwell_hori_1)
@@ -568,13 +566,17 @@ class basic:
         nwell_cell.add(nwell_s_2)
         nwell_cell.add(nwell_s_3)
         nwell_cell.add(nwell_s_4)
-        nwell_cell.flatten()
         # Add pin shapes
         m1_hori_1_x_1 = ll[0]-s_dist+0.5*(basic.OD_W-basic.min_w['M1'])
         m1_hori_1_y_1 = ll[1]-s_dist+0.5*(basic.OD_W-basic.min_w['M1'])
         m1_hori_1_x_2 = ur[0]+basic.NW_OD+0.5*(basic.OD_W+basic.min_w['M1'])
         m1_hori_1_y_2 = ur[1]+basic.NW_OD+0.5*(basic.OD_W-basic.min_w['M1'])
         pin.add_shape('M4',[[m1_hori_1_x_1,m1_hori_1_y_1],[m1_hori_1_x_2,m1_hori_1_y_1+basic.min_w['M1']]])
+        # Add SUB shape
+        sub_shape = gdspy.Rectangle([m1_hori_1_x_1,m1_hori_1_y_1],[m1_hori_1_x_2,m1_hori_1_y_1+basic.min_w['M1']],basic.layer['SUB'],basic.datatype['SUB'])
+        print(sub_shape)
+        nwell_cell.add(sub_shape)
+        nwell_cell.flatten()
         if not removeVert:
             pin.add_shape('M1',[[m1_hori_1_x_1,m1_hori_1_y_2],[m1_hori_1_x_2,m1_hori_1_y_2+basic.min_w['M1']]])
             #pin.add_shape('M1',[[m1_hori_1_x_1,m1_hori_1_y_1],[m1_hori_1_x_1+min_w['M1'],m1_hori_1_y_2+basic.min_w['M1']]])

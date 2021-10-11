@@ -11,6 +11,7 @@ class tsmc40_glovar:
 # Layer Map
     layer = dict()
     layer['LVSDMY'] = 208
+    layer['SUB'] = 236
     layer['MOMDMY'] = 155 
     layer['DMEXCL'] = 150 
     layer['RH'] = 117
@@ -61,6 +62,7 @@ class tsmc40_glovar:
     datatype['VTH'] = 0
     datatype['TAP'] = 0
     datatype['NW'] = 0
+    datatype['SUB'] = 0
     sp = dict()
     sp['CO'] = dict()
     sp['CO']['CO'] = 0.19
