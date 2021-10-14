@@ -20,7 +20,7 @@ class basic:
 # Rules for VIAs
     W_VIA =  [-1, 0.15, 0.2, 0.2] 
     SP_VIA = [-1, 0.17, 0.2, 0.2] 
-    EN_VIA = 0.3
+    EN_VIA = 0.6
 
     @staticmethod
     def block(inst):
