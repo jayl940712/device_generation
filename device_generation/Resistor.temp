@@ -88,6 +88,20 @@ class Resistor:
         m1_vert_space = poly_l - 2 * (min_w['M1'] + x_pos1)
         poly_cell = gdspy.Cell('POLY', True)
         self.origin = [x_pos1, 0]
+    # Contact Shape
+        m1_vert = basic.metal_vert(min_w['M1']+0.02, self.w, resistor=True)
+        m1_shape_h = self.w
+        #m1_shape = gdspy.Rectangle((0,0),(min_w['M1'],m1_shape_h),layer['M1'])
+        #m1_vert.add(m1_shape)
+        m1_vert_ref1 = gdspy.CellReference(m1_vert, (x_pos1, 0))
+        x_pos2 = basic.legal_coord([x_pos1 + m1_vert_space + min_w['M1'],0],self.origin,3)[0]
+        m1_vert_ref2 = gdspy.CellReference(m1_vert, (x_pos2-0.02, 0))
+        # Moved add poly shape here
+        poly_l = poly_l + x_pos2 - (x_pos1 + m1_vert_space + min_w['M1'])
+        poly_shape = gdspy.Rectangle((0, 0), (poly_l, self.w), layer['PO'])
+        poly_cell.add(poly_shape)
+        poly_cell.add(m1_vert_ref1)
+        poly_cell.add(m1_vert_ref2)
     # RPDMY Layer
         self.rpdmy_x1 = en['PO']['CO'] + min_w['CO'] + sp['CO']['RPO']
         self.rpdmy_x2 = self.rpdmy_x1 + self.l
@@ -96,50 +110,14 @@ class Resistor:
             rpdmy_datatype = 1
         rpdmy_shape = gdspy.Rectangle((self.rpdmy_x1, 0), (self.rpdmy_x2, self.w), layer['RPDMY'], datatype=rpdmy_datatype)
         poly_cell.add(rpdmy_shape)
-    # Contact Shape
-        m1_vert = basic.metal_vert(min_w['M1'], self.w, lay=0, licon=True)
-        m1_shape_h = self.w
-        #m1_shape = gdspy.Rectangle((0,0),(min_w['M1'],m1_shape_h),layer['M1'])
-        #m1_vert.add(m1_shape)
-        m1_vert_ref1 = gdspy.CellReference(m1_vert, (x_pos1, 0))
-        x_pos2 = basic.legal_coord([x_pos1 + m1_vert_space + min_w['M1'],0],self.origin,3)[0]
-        m1_vert_ref2 = gdspy.CellReference(m1_vert, (x_pos2, 0))
-        # Moved add poly shape here
-        poly_l = poly_l + x_pos2 - (x_pos1 + m1_vert_space + min_w['M1'])
-        poly_shape = gdspy.Rectangle((0, 0), (poly_l, self.w), layer['PO'])
-        poly_cell.add(poly_shape)
-        poly_cell_bot = poly_cell.copy('POLY_BOT', True)
-        poly_cell_top = poly_cell.copy('POLY_TOP', True)
-        poly_cell.add(m1_vert_ref1)
-        poly_cell.add(m1_vert_ref2)
-        m1_vert = basic.metal_vert(min_w['M1'], self.w)
-        m1_vert_ref3 = gdspy.CellReference(m1_vert, (x_pos1, 0))
-        m1_vert_ref4 = gdspy.CellReference(m1_vert, (x_pos2, 0))
-        poly_cell_bot.add(m1_vert_ref3)
-        if self.seg_num == 1:
-            poly_cell_bot.add(m1_vert_ref4)
-        else:
-            poly_cell_bot.add(m1_vert_ref2)
-        poly_cell_top.add(m1_vert_ref1)
-        poly_cell_top.add(m1_vert_ref4)
     # Poly Array for seg_num
         poly_space = self.w + self.seg_space
-        if self.seg_num > 2:
-            poly_array = gdspy.CellArray(poly_cell, 1, self.seg_num-2, [0, poly_space], origin=(0, poly_space))
-            self.cell.add(poly_array)
-        if self.seg_num > 1:
-            if self.seg_num % 2:
-                poly_res_1 = gdspy.CellReference(poly_cell_top, (0, (self.seg_num-1)*poly_space))
-            else:
-                poly_res_1 = gdspy.CellReference(poly_cell_bot, (0, (self.seg_num-1)*poly_space))
-            self.cell.add(poly_res_1)
-        poly_res_2 = gdspy.CellReference(poly_cell_bot, (0, 0))
-        self.cell.add(poly_res_2)
+        poly_array = gdspy.CellArray(poly_cell, 1, self.seg_num, [0, poly_space])
+        self.cell.add(poly_array)
     # M1 Connection for series/parallel
         #m1_connect = gdspy.Cell('M1_CON', True)
         #m1_con_shape = gdspy.Rectangle((0, 0), (min_w['M1'], self.seg_space), layer['M1'])
         #m1_connect.add(m1_con_shape)
-        delta = (min_w['M1'] - min_w['LI'])*0.5
         if self.series and self.seg_num > 1:
             #m1_num_1 = int((self.seg_num-1)/2)
             #m1_num_2 = int(self.seg_num/2)
@@ -153,19 +131,19 @@ class Resistor:
             for i in range(m1_num_1):
                 if i == m1_num_1 - 1 and self.seg_num % 2 == 0:
                     y1 = 2*(self.w + self.seg_space)*(i-1) + self.w + self.seg_space
-                    m1_ll_y = y1 #basic.legal_coord((x_pos1,y1),self.origin,1)[1]
-                    m1_ur_y = self.w + y1 #basic.legal_len(self.w+y1-m1_ll_y) + m1_ll_y
-                    m1_connect = gdspy.Rectangle((x_pos1+delta,m1_ll_y),(x_pos1+min_w['M1']-delta,m1_ur_y),layer['LI'])
+                    m1_ll_y = basic.legal_coord((x_pos1,y1),self.origin,1)[1]
+                    m1_ur_y = basic.legal_len(self.w+y1-m1_ll_y) + m1_ll_y
+                    m1_connect = gdspy.Rectangle((x_pos1,m1_ll_y),(x_pos1+min_w['M1']+0.02,m1_ur_y),layer['M1'])
                     m1_ll_y_1 = m1_ll_y
                     m1_ur_y_1 = m1_ur_y
                 elif i == 0:
-                    m1_ur_y = self.w #basic.legal_len(self.w)
-                    m1_connect = gdspy.Rectangle((x_pos1+delta,0),(x_pos1+min_w['M1']-delta,m1_ur_y),layer['LI'])
+                    m1_ur_y = basic.legal_len(self.w)
+                    m1_connect = gdspy.Rectangle((x_pos1,0),(x_pos1+min_w['M1']+0.02,m1_ur_y),layer['M1'])
                 else:
                     y1 = 2*(self.w + self.seg_space)*(i-1) + self.w + self.seg_space
-                    m1_ll_y = y1 #basic.legal_coord((x_pos1,y1),self.origin,1)[1]
-                    m1_ur_y = 2*self.w+self.seg_space+y1 #basic.legal_len(2*self.w+self.seg_space+y1-m1_ll_y) + m1_ll_y
-                    m1_connect = gdspy.Rectangle((x_pos1+delta,m1_ll_y),(x_pos1+min_w['M1']-delta,m1_ur_y),layer['LI'])
+                    m1_ll_y = basic.legal_coord((x_pos1,y1),self.origin,1)[1]
+                    m1_ur_y = basic.legal_len(2*self.w+self.seg_space+y1-m1_ll_y) + m1_ll_y
+                    m1_connect = gdspy.Rectangle((x_pos1,m1_ll_y),(x_pos1+min_w['M1']+0.02,m1_ur_y),layer['M1'])
                     if i == m1_num_1 - 1:
                         m1_ll_y_1 = m1_ll_y
                         m1_ur_y_1 = m1_ur_y
@@ -173,16 +151,16 @@ class Resistor:
             for i in range(m1_num_2):
                 if i == m1_num_2 - 1 and self.seg_num % 2 != 0:
                     y1 = 2*(self.w + self.seg_space)*i
-                    m1_ll_y = y1 #basic.legal_coord((x_pos2,y1),self.origin,1)[1]
-                    m1_ur_y = self.w+y1 #basic.legal_len(self.w+y1-m1_ll_y) + m1_ll_y
-                    m1_connect = gdspy.Rectangle((x_pos2+delta,m1_ll_y),(x_pos2+min_w['M1']-delta,m1_ur_y),layer['LI'])
+                    m1_ll_y = basic.legal_coord((x_pos2,y1),self.origin,1)[1]
+                    m1_ur_y = basic.legal_len(self.w+y1-m1_ll_y) + m1_ll_y
+                    m1_connect = gdspy.Rectangle((x_pos2-0.02,m1_ll_y),(x_pos2+min_w['M1'],m1_ur_y),layer['M1'])
                     m1_ll_y_2 = m1_ll_y
                     m1_ur_y_2 = m1_ur_y
                 else:
                     y1 = 2*(self.w + self.seg_space)*i
-                    m1_ll_y = y1 #basic.legal_coord((x_pos1,y1),self.origin,1)[1]
-                    m1_ur_y = 2*self.w+self.seg_space+y1 #basic.legal_len(2*self.w+self.seg_space+y1-m1_ll_y) + m1_ll_y
-                    m1_connect = gdspy.Rectangle((x_pos2+delta,m1_ll_y),(x_pos2+min_w['M1']-delta,m1_ur_y),layer['LI'])
+                    m1_ll_y = basic.legal_coord((x_pos1,y1),self.origin,1)[1]
+                    m1_ur_y = basic.legal_len(2*self.w+self.seg_space+y1-m1_ll_y) + m1_ll_y
+                    m1_connect = gdspy.Rectangle((x_pos2-0.02,m1_ll_y),(x_pos2+min_w['M1'],m1_ur_y),layer['M1'])
                     if i == m1_num_2 - 1:
                         m1_ll_y_2 = m1_ll_y
                         m1_ur_y_2 = m1_ur_y
@@ -190,10 +168,10 @@ class Resistor:
         #elif not self.series and self.seg_num > 1:
         else:
             y1 = (self.seg_num-1)*(self.w+self.seg_space)+self.w
-            m1_ur_y = y1 #basic.legal_len(y1)
-            m1_connect1 = gdspy.Rectangle((x_pos1+delta,0),(x_pos1+min_w['M1']-delta,m1_ur_y),layer['LI'])
+            m1_ur_y = basic.legal_len(y1)
+            m1_connect1 = gdspy.Rectangle((x_pos1,0),(x_pos1+min_w['M1'],m1_ur_y),layer['M1'])
             self.cell.add(m1_connect1)
-            m1_connect2 = gdspy.Rectangle((x_pos2+delta,0),(x_pos2+min_w['M1']-delta,m1_ur_y),layer['LI'])
+            m1_connect2 = gdspy.Rectangle((x_pos2,0),(x_pos2+min_w['M1'],m1_ur_y),layer['M1'])
             self.cell.add(m1_connect2)
             #m1_con_array_1 = gdspy.CellArray(m1_connect, 1, self.seg_num-1, [0, poly_space], (x_pos1, self.w))
             #m1_con_array_2 = gdspy.CellArray(m1_connect, 1, self.seg_num-1, [0, poly_space], (x_pos2, self.w))
@@ -213,34 +191,15 @@ class Resistor:
     #    self.cell.add(rh_shape)
     #    #self.flatten()
     # Adding Pins
-        if self.seg_num > 1:
-            if self.series and self.seg_num == 2:
-                metal_x = gdspy.Rectangle((0, -2*min_w['M1']), (min_w['M1'], min_w['M1']), layer['M1'])
-                _, hori_y = basic.legal_coord((0, self.w+self.seg_space), self.origin, plane=3) 
-                metal_y = gdspy.Rectangle((0, hori_y), (min_w['M1'], hori_y+3*min_w['M1']), layer['M1'])
-            elif self.series and self.seg_num % 2 == 0:
-                hori_y = (self.w+self.seg_space)*(self.seg_num-1)
-                hori_m = gdspy.Rectangle((0, hori_y),(poly_l, hori_y+self.w), layer['M1'])
-                self.cell.add(hori_m)
-                pin_metal_y = basic.legal_len(hori_y-min_w['M1'])
-                metal_x = gdspy.Rectangle((0, 0), (min_w['M1'], pin_metal_y), layer['M1'])
-                metal_y = gdspy.Rectangle((poly_l-min_w['M1'], 0), (poly_l, pin_metal_y), layer['M1'])
-                if pin_metal_y < hori_y:
-                    metal_fill = gdspy.Rectangle((poly_l-min_w['M1'], pin_metal_y), (poly_l, hori_y), layer['M1'])
-                    self.cell.add(metal_fill)
-            else:
-                pin_metal_y = basic.legal_len(self.w*self.seg_num+self.seg_space*(self.seg_num-1))
-                metal_x = gdspy.Rectangle((0, 0), (min_w['M1'], pin_metal_y), layer['M1'])
-                metal_y = gdspy.Rectangle((poly_l-min_w['M1'], 0), (poly_l, pin_metal_y), layer['M1'])
+        if not self.series or self.seg_num == 1:
+            self.minus.add_shape('M1', [[x_pos1, 0], [x_pos1+min_w['M1'], m1_ur_y]])
+            self.plus.add_shape('M1', [[x_pos2, 0], [x_pos2+min_w['M1'], m1_ur_y]])
         else:
-            hori_y = max(min_w['M1'], basic.legal_len(self.w))
-            metal_x = gdspy.Rectangle((0, 0), (min_w['M1'], hori_y), layer['M1'])
-            metal_y = gdspy.Rectangle((poly_l-min_w['M1'], 0), (poly_l, hori_y), layer['M1'])
-
-        self.cell.add(metal_x)
-        self.cell.add(metal_y)
-        self.plus.add_shape('M1', metal_x.get_bounding_box())
-        self.minus.add_shape('M1', metal_y.get_bounding_box())
+            self.minus.add_shape('M1', [[x_pos1, 0], [x_pos1+min_w['M1'], basic.legal_len(self.w)]])
+            if self.seg_num % 2 == 0:
+                self.plus.add_shape('M1', [[x_pos1, m1_ll_y_1], [x_pos1+min_w['M1'], m1_ur_y_1]])
+            else:
+                self.plus.add_shape('M1', [[x_pos2, m1_ll_y_2], [x_pos2+min_w['M1'], m1_ur_y_2]])
 
     def print_pins(self):
         if not (self.plus.check() and self.minus.check()):

@@ -93,7 +93,7 @@ class tsmc40_glovar:
     en['LI']['LCO'] = 0.08
     ex = dict()
     ex['PO'] = dict()
-    ex['PO']['OD'] = 0.1
+    ex['PO']['OD'] = 0.13
     ex['NP'] = dict()
     ex['NP']['OD'] = 0.125
     ex['PP'] = ex['NP']
