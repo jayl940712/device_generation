@@ -115,13 +115,21 @@ class Resistor:
         m1_vert = basic.metal_vert(min_w['M1'], self.w)
         m1_vert_ref3 = gdspy.CellReference(m1_vert, (x_pos1, 0))
         m1_vert_ref4 = gdspy.CellReference(m1_vert, (x_pos2, 0))
-        poly_cell_bot.add(m1_vert_ref3)
-        if self.seg_num == 1:
-            poly_cell_bot.add(m1_vert_ref4)
+        if self.series:
+            poly_cell_bot.add(m1_vert_ref3)
+            if self.seg_num == 1:
+                poly_cell_bot.add(m1_vert_ref4)
+            else:
+                poly_cell_bot.add(m1_vert_ref2)
+            poly_cell_top.add(m1_vert_ref1)
+            poly_cell_top.add(m1_vert_ref4)
         else:
-            poly_cell_bot.add(m1_vert_ref2)
-        poly_cell_top.add(m1_vert_ref1)
-        poly_cell_top.add(m1_vert_ref4)
+            poly_cell.add(m1_vert_ref3)
+            poly_cell.add(m1_vert_ref4)
+            poly_cell_bot.add(m1_vert_ref3)
+            poly_cell_bot.add(m1_vert_ref4)
+            poly_cell_top.add(m1_vert_ref3)
+            poly_cell_top.add(m1_vert_ref4)
     # Poly Array for seg_num
         poly_space = self.w + self.seg_space
         if self.seg_num > 2:
