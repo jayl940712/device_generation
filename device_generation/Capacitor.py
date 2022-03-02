@@ -6,6 +6,7 @@ from .Pin import Pin
 # Standard Rules from glovar.py
 min_w = glovar.min_w
 layer = glovar.layer
+datatype = glovar.datatype
 sp = glovar.sp
 en = glovar.en
 ex = glovar.ex
@@ -16,55 +17,28 @@ OD_W = glovar.OD_W
 GRID = glovar.GRID
 
 # Special Rules for Capacitor
-W_CON = 0.14 # Cap contact width
-W_VIA = 0.07 # VIA width
-SP_VIA = 0.09 # VIA to VIA spacing
-EN_VIA = 0.05 # Metal Enclose VIA Rule
-VIA_OFF = (W_CON - W_VIA)/2
-VIA_DIST = (SP_VIA - W_VIA)/2
-SP_SUB = 0.5 # Substrate contact to finger space
-W_SUB = min_w['M1'] #0.12 # Sub width
+SP_CAP = 0.2
+SP_BOT = 0.7
+EN_VIA = 0.2
+SP_VIA = 0.2
+W_VIA = 0.2
 
 class Capacitor:
-    def __init__(self, name, w, sp, nf, l, m_bot=3, m_top=5, attr=[], f_tip=0.14, flatten=True):
+    def __init__(self, name, w, l, m_bot=3, attr=[], flatten=True):
         self.name = name
         self.w = w
         self.l = l
-        self.sp = sp
-        self.nf = nf
-        self.metal = []
-        self.via = []
         self.m_bot = m_bot
-        self.m_top = m_top
         self.plus = Pin('PLUS')
         self.minus = Pin('MINUS')
-        self.bulk = Pin('BULK')
-        self.t2 = False
-        if '2t' in attr:
-            self.t2 = True
-        # Reversing pin order to top metal first, fix for routing
-        for i in range(m_bot, m_top+1):
-        #for i in range(m_top, m_bot-1, -1):
-            self.metal.append('M'+str(i))
-            if i != m_top:
-                self.via.append(i)
-        self.f_tip = f_tip
         self.cell = gdspy.Cell(name, True)
         self.finger_core()
-        if self.t2:
-            self.t2_layer()
-        else:
-            self.lvs_layer()
-        self.via_layer()
         if flatten:
             self.flatten()
         #self.print_pins()
 
     def pin(self):
-        if self.t2:
-            return [self.plus, self.minus]
-        else:
-            return [self.plus, self.minus, self.bulk]
+        return [self.plus, self.minus]
 
     def flatten(self):
         if self.origin:
@@ -74,7 +48,6 @@ class Capacitor:
             self.cell.add(temp)
             self.plus.adjust(self.origin)
             self.minus.adjust(self.origin)
-            self.bulk.adjust(self.origin)
             self.origin = None
         self.cell.flatten()
 
@@ -95,133 +68,55 @@ class Capacitor:
             return self.cell.to_gds(args[0], args[1])
 
     def finger_core(self):
-# MOMCAP Finger CORE
-    # Define CAP finger shapes
-    # This should be legal by default if f_tip=170n, sp=70n, w=70n
-        self.W_CON = (basic.legal_len(2*W_CON + 2*self.f_tip + self.l) - 2*self.f_tip - self.l) * 0.5
-        self.VIA_OFF = int((self.W_CON - W_VIA)*100)/200.0
-        self.finger_y1 = self.W_CON + self.f_tip
-        self.finger_y2 = self.finger_y1 + self.l
-        self.finger_sp = self.sp + self.w
-        con_len = basic.legal_len(self.finger_sp*(self.nf-1)+self.w)
-        self.con1 = [[0, 0], [con_len, self.W_CON]]
-        self.con2 = [[0, self.finger_y2+self.f_tip], [self.con1[1][0], self.con1[1][1]+self.finger_y2+self.f_tip]]
         self.origin = [0, 0]
-        for metal in self.metal:
-        # Cap core finger cell
-            finger_cell = gdspy.Cell("FINGER", True)
-            finger_shape = gdspy.Rectangle((0, self.finger_y1), (self.w, self.finger_y2), layer[metal])
-            finger_cell.add(finger_shape)
-            finger_array = gdspy.CellArray(finger_cell, self.nf, 1, [self.finger_sp, 0])
-            self.cell.add(finger_array)
-        # Finger extension
-            ext_cell = gdspy.Cell("EXT", True)
-            ext_shape = gdspy.Rectangle((0, self.W_CON), (self.w, self.finger_y1), layer[metal])
-            ext_cell.add(ext_shape)
-            bot_ext = gdspy.CellArray(ext_cell, self.nf/2, 1, [2*self.finger_sp, 0])
-            bot_cell = gdspy.Cell("BOT_EXT", True)
-            bot_cell.add(bot_ext)
-            top_ext = gdspy.CellReference(bot_cell, (self.finger_sp, self.finger_y2-self.W_CON))
-            self.cell.add([bot_ext, top_ext])
-        # Finger connection metal
-            con_bot_shape = gdspy.Rectangle(self.con1[0], self.con1[1], layer[metal])
-            con_top_shape = gdspy.Rectangle(self.con2[0], self.con2[1], layer[metal])
-            self.cell.add([con_bot_shape, con_top_shape])
-        # Adding Pins
-            self.plus.add_shape(metal, [self.con1[0],self.con1[1]])
-            self.minus.add_shape(metal, [self.con2[0], self.con2[1]])
-            #self.plus.add_shape(metal, [self.con1[0],[self.con1[1][0],self.con1[0][1]+min_w['M1']]])
-            #self.minus.add_shape(metal, [[self.con2[0][0],self.con2[1][1]-min_w['M1']],self.con2[1]])
-        # MOMDMY Layer
-            momdmy_shape = gdspy.Rectangle((-GRID, self.W_CON), (self.con2[1][0]+GRID, self.con2[0][1]), layer['MOMDMY'], datatype=int(metal[1]))
-            self.cell.add(momdmy_shape)
-        #self.flatten()
-
-    def t2_layer(self):
-        for metal in self.metal:
-        # DMEXCL Layer
-            dmexcl_shape = gdspy.Rectangle((0, 0), self.con2[1], layer['DMEXCL'], datatype=int(metal[1]))
-            self.cell.add(dmexcl_shape)
-    # MOMDMY test0 and dummy8 layer for LVS
-    # Layer datatype hard encoded
-        shape = gdspy.Rectangle((-GRID, self.W_CON), (self.con2[1][0]+GRID, self.con2[0][1]), layer['MOMDMY'], datatype=100)
-        self.cell.add(shape)
-        shape = gdspy.Rectangle((-GRID, self.W_CON), (self.con2[1][0]+GRID, self.con2[0][1]), layer['MOMDMY'], datatype=27)
-        self.cell.add(shape)
-        #self.flatten()
-
-    def lvs_layer(self):
-        # Substrate contact
-        temp = sp['CO']['CO']
-        sp['CO']['CO'] = 0.11
-        self.sub_x1 = basic.legal_coord((-SP_SUB-W_SUB,0),(0,0),1)[0]
-        self.sub_x2 = basic.legal_coord((self.con2[1][0]+SP_SUB,0),(0,0),2)[0]
-        #self.sub_x1 = -SP_SUB-W_SUB
-        #self.sub_x2 = self.con2[1][0]+SP_SUB
-        for i in [1,2,3,4,5,6]:
-            sub_cell = basic.metal_vert(W_SUB, self.con2[1][1],lay=i)
-            sub_cell1 = gdspy.CellReference(sub_cell, (self.sub_x1, 0))
-            sub_cell2 = gdspy.CellReference(sub_cell, (self.sub_x2, 0))
-            self.cell.add(sub_cell1)
-            self.cell.add(sub_cell2)
-        sp['CO']['CO'] = temp
-        self.bulk.add_shape('M6', sub_cell1.get_bounding_box())
-        self.bulk.add_shape('M6', sub_cell2.get_bounding_box())
-        # PO Dummy Layer
-        podmy_shape = gdspy.Rectangle((self.sub_x1, 0), (self.sub_x2+W_SUB, self.con2[1][1]), layer['PO'], datatype=7)
-        self.cell.add(podmy_shape)
-        # OD25 Layer
-        self.od25_p1 = [self.sub_x1-en['OD']['PO'], -en['OD']['PO']]
-        self.od25_p2 = [self.sub_x2+en['OD']['PO']+W_SUB, self.con2[1][1]+en['OD']['PO']]
-        od25_shape = gdspy.Rectangle(self.od25_p1, self.od25_p2, layer['OD_25'])
-        self.cell.add(od25_shape)
-        # MOMDMY test0 
-        shape = gdspy.Rectangle((-GRID, self.W_CON), (self.con2[1][0]+GRID, self.con2[0][1]), layer['MOMDMY'], datatype=100)
-        self.cell.add(shape)
-        # MOMDMY dummy2
-        shape = gdspy.Rectangle(self.od25_p1, self.od25_p2, layer['MOMDMY'], datatype=21)
-        self.cell.add(shape)
-        # DMEXCL Layer
-        for metal in self.metal:
-            dmexcl_shape = gdspy.Rectangle((-GRID, self.W_CON), (self.con2[1][0]+GRID, self.con2[0][1]), layer['DMEXCL'], datatype=int(metal[1]))
-            self.cell.add(dmexcl_shape)
-        # OD/PO BLK
-        shape = gdspy.Rectangle(self.od25_p1, self.od25_p2, layer['DMEXCL'], datatype=20)
-        self.cell.add(shape)
-        shape = gdspy.Rectangle(self.od25_p1, self.od25_p2, layer['DMEXCL'], datatype=21)
-        self.cell.add(shape)
-        #self.flatten()
-
-
-    def via_layer(self):
-        width = self.con1[1][0]
-        via_count = int((width - 2 * EN_VIA + SP_VIA)/(W_VIA + SP_VIA))
-        via_offset = (width - W_VIA - (SP_VIA + W_VIA) * (via_count - 1))/2
-        delta = 0.5 * (SP_VIA + W_VIA)
-        for via in self.via:
-            via_cell = gdspy.Cell("VIA", True)
-            via_layer = layer['VIA'+str(via)]
-            via_shape = gdspy.Rectangle((0, self.VIA_OFF), (W_VIA, self.VIA_OFF+W_VIA), via_layer)
-            via_cell.add(via_shape)
-            if (via - self.m_bot) % 2 == 0:
-                via_array1 = gdspy.CellArray(via_cell, via_count, 1, [SP_VIA+W_VIA, 0], (via_offset, 0))
-                via_array2 = gdspy.CellArray(via_cell, via_count, 1, [SP_VIA+W_VIA, 0], (via_offset, self.con2[0][1]))
-            else:
-                via_array1 = gdspy.CellArray(via_cell, via_count-1, 1, [SP_VIA+W_VIA, 0], (via_offset+delta, 0))
-                via_array2 = gdspy.CellArray(via_cell, via_count-1, 1, [SP_VIA+W_VIA, 0], (via_offset+delta, self.con2[0][1]))
-            self.cell.add(via_array1)
-            self.cell.add(via_array2)
-        #self.flatten()
-
+        # Add top plate
+        w = self.w - 2 * SP_CAP
+        h = self.l - 2 * SP_CAP
+        contact_num_w = int((w-2*EN_VIA+SP_VIA)/(W_VIA+SP_VIA))
+        contact_num_h = int((h-2*EN_VIA+SP_VIA)/(W_VIA+SP_VIA))
+        contact_space_w = (w-2*EN_VIA-contact_num_w*W_VIA)/(contact_num_w-1)+W_VIA
+        contact_space_h = (h-2*EN_VIA-contact_num_h*W_VIA)/(contact_num_h-1)+W_VIA
+        if contact_space_w < SP_VIA + W_VIA:
+            contact_num_w = contact_num_w - 1 
+            contact_space_w = (h-2*EN_VIA-contact_num_w*W_VIA)/(contact_num_w-1)+W_VIA
+        if contact_space_h < SP_VIA + W_VIA:
+            contact_num_h = contact_num_h - 1 
+            contact_space_h = (h-2*EN_VIA-contact_num_h*W_VIA)/(contact_num_h-1)+W_VIA
+        contact_space_h = round(contact_space_h/basic.GRID)*basic.GRID  
+        contact_space_w = round(contact_space_w/basic.GRID)*basic.GRID  
+        x_offset = (w-W_VIA-contact_space_w*(contact_num_w-1))*0.5 
+        y_offset = (h-W_VIA-contact_space_h*(contact_num_h-1))*0.5 
+        x_offset = round(x_offset/basic.GRID)*basic.GRID
+        y_offset = round(y_offset/basic.GRID)*basic.GRID
+        met_layer = 'M' + str(self.m_bot+1)
+        self.top_shape = gdspy.Rectangle((0, 0),(w,h),basic.layer[met_layer], basic.datatype[met_layer])
+        self.cell.add(self.top_shape)
+        contact_cell = basic.contact(self.m_bot)
+        contact_array = gdspy.CellArray(contact_cell, contact_num_w, contact_num_h, [contact_space_w, contact_space_h], [x_offset, y_offset])
+        self.cell.add(contact_array)
+        cap_layer = gdspy.Rectangle((-SP_CAP, -SP_CAP), (self.w-SP_CAP, self.l-SP_CAP), layer['CAP'], datatype['CAP'])
+        self.cell.add(cap_layer)
+        # Add top plate pin shape
+        legal_x, legal_y = basic.legal_coord((w, h), self.origin)
+        self.plus.add_shape(met_layer, [[0,0], [legal_x, legal_y]])
+        # Add bottom plate 
+        offset_x = legal_x+min_w['M1']+min_w['SP']
+        offset_y = -min_w['M1']-min_w['SP']
+        bot_contact_y = max(legal_y+2*(min_w['M1']+min_w['SP']), basic.legal_len(w+SP_BOT-offset_y-min_w['M1']))
+        bot_contact = basic.metal_vert(min_w['M1'], bot_contact_y, lay=self.m_bot+1)
+        while offset_x - w < min_w['M1']:
+            offset_x += min_w['M1'] + min_w['SP']
+        bot_contact_ref = gdspy.CellReference(bot_contact, (offset_x, offset_y))
+        self.cell.add(bot_contact_ref)
+        self.minus.add_shape(met_layer, [[offset_x, offset_y], [offset_x+min_w['M1'], offset_y+legal_y+2*(min_w['M1']+min_w['SP'])]])
+        met_layer = 'M' + str(self.m_bot)
+        bot_y = max(bot_contact_y + offset_y, w + SP_BOT)
+        bot_met = gdspy.Rectangle((-SP_BOT, -SP_BOT), (offset_x+min_w['M1'], bot_y), layer[met_layer], datatype[met_layer])
+        self.cell.add(bot_met)
+ 
     def print_pins(self):
-        if not (self.plus.check() and self.minus.check() and self.bulk.check()):
+        if not (self.plus.check() and self.minus.check()):
             print("Pin location not legal")
-        if self.t2:
-            pass
-            #print self.plus, self.minus
-        else:
-            self.bulk.check()
-            #print self.plus, self.minus, self.bulk
 
     def flip_vert(self):
         flip_cell = gdspy.Cell(self.cell.name, True)
@@ -246,7 +141,6 @@ class Capacitor:
         #self.flatten()
         self.plus.flip_vert(x_sym_axis)
         self.minus.flip_vert(x_sym_axis)
-        self.bulk.flip_vert(x_sym_axis)
 
     def bounding_box(self):
         if self.origin:

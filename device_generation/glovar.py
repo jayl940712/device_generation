@@ -40,6 +40,7 @@ class tsmc40_glovar:
     layer['OD'] = 6
     layer['TAP'] = 5
     layer['NW'] = 3
+    layer['CAP'] = 89
     datatype = dict()
     datatype['M1'] = 0
     datatype['M2'] = 0
@@ -63,6 +64,7 @@ class tsmc40_glovar:
     datatype['TAP'] = 0
     datatype['NW'] = 0
     datatype['SUB'] = 0
+    datatype['CAP'] = 0
     sp = dict()
     sp['CO'] = dict()
     sp['CO']['CO'] = 0.19
