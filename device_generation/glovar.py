@@ -104,5 +104,5 @@ class tsmc40_glovar:
     NWELL_GR = True
     NW_OD = 0.10
     NP_OD = 0.05
-    OD_W = 0.15
+    OD_W = 0.4
     SUB_GR = False

@@ -570,13 +570,17 @@ class basic:
             li_offset = 0.5*(basic.min_w['LI']-basic.OD_W)
             xx1 = ll[0]-s_dist-li_offset
             yy1 = ll[1]-s_dist-li_offset
-            nwell_cell.add(gdspy.Rectangle([xx1,yy1],[xx1+basic.min_w['LI'],yy1+basic.min_w['LI']],basic.layer['LI'],basic.datatype['LI']))
+            nwell_cell.add(gdspy.Rectangle([xx1,yy1],[xx1+basic.min_w['LI'],yy1+basic.min_w['LI']-li_offset],basic.layer['LI'],basic.datatype['LI']))
+            nwell_cell.add(gdspy.Rectangle([xx1,yy1],[xx1+basic.min_w['LI']-li_offset,yy1+basic.min_w['LI']],basic.layer['LI'],basic.datatype['LI']))
             yy1 = ur[1]+basic.NW_OD-li_offset
-            nwell_cell.add(gdspy.Rectangle([xx1,yy1],[xx1+basic.min_w['LI'],yy1+basic.min_w['LI']],basic.layer['LI'],basic.datatype['LI']))
+            nwell_cell.add(gdspy.Rectangle([xx1,yy1+li_offset],[xx1+basic.min_w['LI'],yy1+basic.min_w['LI']],basic.layer['LI'],basic.datatype['LI']))
+            nwell_cell.add(gdspy.Rectangle([xx1,yy1],[xx1+basic.min_w['LI']-li_offset,yy1+basic.min_w['LI']],basic.layer['LI'],basic.datatype['LI']))
             xx1 = ur[0]+basic.NW_OD-li_offset
-            nwell_cell.add(gdspy.Rectangle([xx1,yy1],[xx1+basic.min_w['LI'],yy1+basic.min_w['LI']],basic.layer['LI'],basic.datatype['LI']))
+            nwell_cell.add(gdspy.Rectangle([xx1,yy1+li_offset],[xx1+basic.min_w['LI'],yy1+basic.min_w['LI']],basic.layer['LI'],basic.datatype['LI']))
+            nwell_cell.add(gdspy.Rectangle([xx1+li_offset,yy1],[xx1+basic.min_w['LI'],yy1+basic.min_w['LI']],basic.layer['LI'],basic.datatype['LI']))
             yy1 = ll[1]-s_dist-li_offset
-            nwell_cell.add(gdspy.Rectangle([xx1,yy1],[xx1+basic.min_w['LI'],yy1+basic.min_w['LI']],basic.layer['LI'],basic.datatype['LI']))
+            nwell_cell.add(gdspy.Rectangle([xx1,yy1],[xx1+basic.min_w['LI'],yy1+basic.min_w['LI']-li_offset],basic.layer['LI'],basic.datatype['LI']))
+            nwell_cell.add(gdspy.Rectangle([xx1+li_offset,yy1],[xx1+basic.min_w['LI'],yy1+basic.min_w['LI']],basic.layer['LI'],basic.datatype['LI']))
         else:
             nwell_s_1 = gdspy.CellReference(basic.nwell_square('PP',[1], 4), (ll[0]-s_dist, ll[1]-s_dist))
             nwell_s_2 = gdspy.CellReference(basic.nwell_square('PP',[]), (ll[0]-s_dist, ur[1]+basic.NW_OD))
