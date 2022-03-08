@@ -15,11 +15,8 @@ NP_OD = glovar.NP_OD
 OD_W = glovar.OD_W
 GRID = glovar.GRID
 
-# Special Rule for RPO layers
-en_pp_po_wo = 0.14
-
 class Resistor:
-    def __init__(self, series, name, w, l, seg_num, seg_space=0.33, attr=[]):
+    def __init__(self, series, name, w, l, seg_num, seg_space=0.4, attr=[]):
     # seg_space will be hornoured, users should check if spacing satisfy grid 
         self.series = series
         self.name = name
@@ -29,19 +26,8 @@ class Resistor:
         self.seg_space = seg_space
         self.plus = Pin('PLUS')
         self.minus = Pin('MINUS')
-        self.m = False
-        self.wo = False
-        if 'm' in attr:
-            self.m = True
-        if 'wo' in attr:
-            self.wo = True
-            en_pp_po = en['PP']['PO']
-            en['PP']['PO'] = en_pp_po_wo
         self.cell = gdspy.Cell(name, True) 
         self.res_core()
-        if 'wo' in attr:
-            self.rpo_layer()
-            en['PP']['PO'] = en_pp_po
         self.flatten()
         self.print_pins()
 
@@ -75,15 +61,11 @@ class Resistor:
         elif len(args) == 2:
             return self.cell.to_gds(args[0], args[1])
 
-    def rpo_layer(self):
-        rpo_shape = gdspy.Rectangle((self.rpdmy_x1, -ex['RPO']['PO']), (self.rpdmy_x2, self.cell_poly_w+ex['RPO']['PO']), layer['RPO'])
-        self.cell.add(rpo_shape)
-        #self.flatten()
-
     def res_core(self):
 # Poly Resistor Core
     # Poly Shape Core
         x_pos1 = en['PO']['CO'] - 0.5 * (min_w['M1'] - min_w['CO'])
+        x_pos1 = 0
         poly_l = 2 * (en['PO']['CO'] + sp['CO']['RPO'] + min_w['CO']) + self.l
         m1_vert_space = poly_l - 2 * (min_w['M1'] + x_pos1)
         poly_cell = gdspy.Cell('POLY', True)
@@ -91,10 +73,7 @@ class Resistor:
     # RPDMY Layer
         self.rpdmy_x1 = en['PO']['CO'] + min_w['CO'] + sp['CO']['RPO']
         self.rpdmy_x2 = self.rpdmy_x1 + self.l
-        rpdmy_datatype = 0
-        if self.m:
-            rpdmy_datatype = 1
-        rpdmy_shape = gdspy.Rectangle((self.rpdmy_x1, 0), (self.rpdmy_x2, self.w), layer['RPDMY'], datatype=rpdmy_datatype)
+        rpdmy_shape = gdspy.Rectangle((self.rpdmy_x1, 0), (self.rpdmy_x2, self.w), layer['RPDMY'], datatype=0)
         poly_cell.add(rpdmy_shape)
     # Contact Shape
         m1_vert = basic.metal_vert(min_w['M1'], self.w, lay=0, licon=True)
@@ -231,7 +210,7 @@ class Resistor:
                 hori_m = gdspy.Rectangle((0, hori_y),(poly_l, hori_y+self.w), layer['M1'])
                 self.cell.add(hori_m)
                 pin_metal_y = basic.legal_len(hori_y-min_w['M1'])
-                metal_x = gdspy.Rectangle((0, 0), (min_w['M1'], pin_metal_y), layer['M1'])
+                metal_x = gdspy.Rectangle((0, 0), (min_w['M1'], pin_metal_y-2*min_w['M1']), layer['M1'])
                 metal_y = gdspy.Rectangle((poly_l-min_w['M1'], 0), (poly_l, pin_metal_y), layer['M1'])
                 if pin_metal_y < hori_y:
                     metal_fill = gdspy.Rectangle((poly_l-min_w['M1'], pin_metal_y), (poly_l, hori_y), layer['M1'])

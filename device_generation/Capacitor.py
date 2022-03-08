@@ -18,7 +18,7 @@ GRID = glovar.GRID
 
 # Special Rules for Capacitor
 SP_CAP = 0.2
-SP_BOT = 0.7
+SP_BOT = 0.8
 EN_VIA = 0.2
 SP_VIA = 0.2
 W_VIA = 0.2
