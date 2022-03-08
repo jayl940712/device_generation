@@ -104,7 +104,7 @@ class Capacitor:
         offset_y = -min_w['M1']-min_w['SP']
         bot_contact_y = max(legal_y+2*(min_w['M1']+min_w['SP']), basic.legal_len(w+SP_BOT-offset_y-min_w['M1']))
         bot_contact = basic.metal_vert(min_w['M1'], bot_contact_y, lay=self.m_bot+1)
-        while offset_x - w < min_w['M1']:
+        while offset_x - w < min_w['M1']: # 0.4
             offset_x += min_w['M1'] + min_w['SP']
         bot_contact_ref = gdspy.CellReference(bot_contact, (offset_x, offset_y))
         self.cell.add(bot_contact_ref)
@@ -113,6 +113,9 @@ class Capacitor:
         bot_y = max(bot_contact_y + offset_y, w + SP_BOT)
         bot_met = gdspy.Rectangle((-SP_BOT, -SP_BOT), (offset_x+min_w['M1'], bot_y), layer[met_layer], datatype[met_layer])
         self.cell.add(bot_met)
+        pr_layer = gdspy.Rectangle((-SP_BOT, -SP_BOT), (offset_x, bot_y), layer['PR'], datatype['PR'])
+        self.cell.add(pr_layer)
+
  
     def print_pins(self):
         if not (self.plus.check() and self.minus.check()):

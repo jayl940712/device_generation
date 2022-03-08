@@ -6,8 +6,8 @@ class tsmc40_glovar:
     min_w = dict()
     min_w['CO'] = 0.17
     min_w['LI'] = 0.17
-    min_w['M1'] = 0.33
-    min_w['SP'] = 0.33
+    min_w['M1'] = 0.4
+    min_w['SP'] = 0.4
 # Layer Map
     layer = dict()
     layer['LVSDMY'] = 208
@@ -41,6 +41,7 @@ class tsmc40_glovar:
     layer['TAP'] = 5
     layer['NW'] = 3
     layer['CAP'] = 89
+    layer['PR'] = 105
     datatype = dict()
     datatype['M1'] = 0
     datatype['M2'] = 0
@@ -65,6 +66,7 @@ class tsmc40_glovar:
     datatype['NW'] = 0
     datatype['SUB'] = 0
     datatype['CAP'] = 0
+    datatype['PR'] = 0
     sp = dict()
     sp['CO'] = dict()
     sp['CO']['CO'] = 0.19
